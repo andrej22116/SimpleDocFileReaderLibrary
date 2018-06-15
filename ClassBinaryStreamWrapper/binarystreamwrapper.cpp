@@ -1,6 +1,6 @@
 #include "ClassBinaryStreamWrapper/binarystreamwrapper.hpp"
 
-BinaryStreamWrapper::BinaryStreamWrapper(std::ifstream& stream)
+BinaryStreamWrapper::BinaryStreamWrapper(std::istream& stream)
 {
     _stream = &stream;
     calculateStreamSize();

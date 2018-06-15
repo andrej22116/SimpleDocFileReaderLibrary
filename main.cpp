@@ -2,7 +2,10 @@
 #include <locale>
 #include <codecvt>
 #include <string>
+#include <fstream>
+
 #include "ClassBinaryStreamWrapper/binarystreamwrapper.hpp"
+#include "ClassWindowsCompoundBinaryFileFormatReader/windowscompoundbinaryfileformatreader.h"
 
 using namespace std;
 
@@ -39,7 +42,13 @@ int main()
     }
     {
         ifstream fin("kek", ios::binary);
-        BinaryStreamWrapper finBin(fin);
+        //fin.rdbuf()
+        std::stringbuf _streamBufer;
+        std::iostream _memoryStream(&_streamBufer);
+        _memoryStream << fin.rdbuf();
+        fin.seekg(0, ios_base::beg);
+        fin.close();
+        BinaryStreamWrapper finBin(_memoryStream);
         long long varLong = finBin.peekData<long long>(sizeof(char) + sizeof(short) + sizeof(int));
         char varChar = finBin.peekData<char>();
         short varShort = finBin.getData<short>(sizeof(char));
@@ -51,6 +60,15 @@ int main()
              << L"\nint: " << varInt
              << L"\nlong: " << varLong << endl;
         cout << convert_UTF16_To_UTF8(u16string(u"\u4f60\u597d⬣ ⬢ ⬟ ⭓ ")) << endl;
+    }
+
+    {
+        ifstream fin("TestDoc_2.doc", ios::binary);
+        WindowsCompoundBinaryFileFormatReader lol(fin);
+    }
+    {
+        //ifstream fin("MakeFile", ios::binary);
+        //WindowsCompoundBinaryFileFormatReader lol(fin);
     }
 
     return 0;

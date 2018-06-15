@@ -1,16 +1,16 @@
 #ifndef BINARYSTREAMWRAPPER_H
 #define BINARYSTREAMWRAPPER_H
 
-#include <fstream>
+#include <istream>
 
 class BinaryStreamWrapper
 {
 private:
-    std::ifstream* _stream;
+    std::istream* _stream;
     std::size_t _streamSize;
 
 public:
-    BinaryStreamWrapper(std::ifstream& stream);
+    BinaryStreamWrapper(std::istream& stream);
 
     template<typename T>
     inline T getData()
