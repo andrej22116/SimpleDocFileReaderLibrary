@@ -15,4 +15,5 @@ HEADERS += \
     ClassContainer/container.h \
     ClassContainer/ClassTextContainer/textcontainer.h \
     ClassWindowsCompoundBinaryFileFormatReader/windowscompoundbinaryfileformatreader.h \
-    variablevisualize.hpp
+    variablevisualize.hpp \
+    WindowsCompoundBinaryFileformat/wcbff_structures.h

@@ -1,5 +1,5 @@
-#ifndef VARIABLEVISUALIZE_H
-#define VARIABLEVISUALIZE_H
+#ifndef VARIABLEVISUALIZE_HPP
+#define VARIABLEVISUALIZE_HPP
 
 #include <sstream>
 

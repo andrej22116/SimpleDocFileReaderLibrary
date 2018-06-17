@@ -2,7 +2,6 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
-#include "variablevisualize.hpp"
 
 WindowsCompoundBinaryFileFormatReader::WindowsCompoundBinaryFileFormatReader(std::istream& stream)
     : _memoryStream(&_streamBuffer)
@@ -23,20 +22,21 @@ WindowsCompoundBinaryFileFormatReader::WindowsCompoundBinaryFileFormatReader(std
     readHeader(fBinStream);
     readDIFATChains(fBinStream);
     readFATChains(fBinStream);
+    //readMiniFATChains(fBinStream);
 }
 
 
 void WindowsCompoundBinaryFileFormatReader::readHeader(BinaryStreamWrapper& fBinStream)
 {
-    std::cout << "\n[_._._._HEADER_._._._]" << std::endl;
+    //std::cout << "\n[_._._._HEADER_._._._]" << std::endl;
 
     // Get file system version.
     this->_version = fBinStream.getData<unsigned short>(0x1A);
-    std::cout << "[HEADER] File system version: " << toHex(this->_version) << std::endl;
+    //std::cout << "[HEADER] File system version: " << toHex(this->_version) << std::endl;
 
     // Get order bytes in file.
     auto bytesOrder = fBinStream.getData<unsigned short>(0x1C);
-    std::cout << "[HEADER] Order bytes: " << toHex(bytesOrder) << std::endl;
+    //std::cout << "[HEADER] Order bytes: " << toHex(bytesOrder) << std::endl;
     _isLittleEndian = bytesOrder == 0xFFFE;
 
     // Get sectors offsets.
@@ -44,44 +44,44 @@ void WindowsCompoundBinaryFileFormatReader::readHeader(BinaryStreamWrapper& fBin
     this->_sectorShift_MiniFAT = fBinStream.getData<unsigned short>(0x20);
     this->_maxStreamSize_miniFAT_Bits = fBinStream.getData<unsigned int>(0x38);
 
-    std::cout << "[HEADER] FAT sector shift: " << toHex(this->_sectorShift_FAT) << std::endl;
-    std::cout << "[HEADER] Mini FAT sector shift: " << toHex(this->_sectorShift_MiniFAT) << std::endl;
-    std::cout << "[HEADER] Max mini FAT stream size: " << toHex(this->_maxStreamSize_miniFAT_Bits) << std::endl;
+    //std::cout << "[HEADER] FAT sector shift: " << toHex(this->_sectorShift_FAT) << std::endl;
+    //std::cout << "[HEADER] Mini FAT sector shift: " << toHex(this->_sectorShift_MiniFAT) << std::endl;
+    //std::cout << "[HEADER] Max mini FAT stream size: " << toHex(this->_maxStreamSize_miniFAT_Bits) << std::endl;
 
     if (this->_version == 0x04)
     {
         // Files amount.
         this->_filesAmount = fBinStream.getData<unsigned int>(0x28);
-        std::cout << "[HEADER] Files amount: " << toHex(this->_filesAmount) << std::endl;
+        //std::cout << "[HEADER] Files amount: " << toHex(this->_filesAmount) << std::endl;
     }
     // Offset to first file.
     this->_firstFileOffset = fBinStream.getData<unsigned int>(0x30);
-    std::cout << "[HEADER] First file offset: " << toHex(this->_firstFileOffset) << std::endl;
+    //std::cout << "[HEADER] First file offset: " << toHex(this->_firstFileOffset) << std::endl;
 
     // FAT sectors amount.
     this->_sectorsAmount_FAT = fBinStream.getData<unsigned int>(0x2C);
-    std::cout << "[HEADER] FAT sectors amount: " << toHex(this->_sectorsAmount_FAT) << std::endl;
+    //std::cout << "[HEADER] FAT sectors amount: " << toHex(this->_sectorsAmount_FAT) << std::endl;
 
     // First mini FAT sector location.
     this->_firstSectorsOffset_MiniFAT = fBinStream.getData<unsigned int>(0x3C);
-    std::cout << "[HEADER] Mini FAT first sector offset: " << toHex(this->_firstSectorsOffset_MiniFAT) << std::endl;
+    //std::cout << "[HEADER] Mini FAT first sector offset: " << toHex(this->_firstSectorsOffset_MiniFAT) << std::endl;
     // Mini FAT sectors amount.
     this->_sectorsAmount_MiniFAT = fBinStream.getData<unsigned int>(0x40);
-    std::cout << "[HEADER] Mini FAT sectors amount: " << toHex(this->_sectorsAmount_MiniFAT) << std::endl;
+    //std::cout << "[HEADER] Mini FAT sectors amount: " << toHex(this->_sectorsAmount_MiniFAT) << std::endl;
 
     // First DIFAT sector location.
     this->_firstSectorsOffset_DIFAT = fBinStream.getData<unsigned int>(0x44);
     this->_sectorsAmount_DIFAT = fBinStream.getData<unsigned int>(0x48);
-    std::cout << "[HEADER] DIFAT first sector offset: " << toHex(this->_firstSectorsOffset_DIFAT) << std::endl;
-    std::cout << "[HEADER] DIFAT sectors amount: " << toHex(this->_sectorsAmount_DIFAT) << std::endl;
+    //std::cout << "[HEADER] DIFAT first sector offset: " << toHex(this->_firstSectorsOffset_DIFAT) << std::endl;
+    //std::cout << "[HEADER] DIFAT sectors amount: " << toHex(this->_sectorsAmount_DIFAT) << std::endl;
 }
 
 void WindowsCompoundBinaryFileFormatReader::readDIFATChains(BinaryStreamWrapper& fBinStream)
 {
-    std::cout << "\n[_._._._DIFAT_CHAINS_._._._]" << std::endl;
+    //std::cout << "\n[_._._._DIFAT_CHAINS_._._._]" << std::endl;
     _difatChains.reserve(110);
 
-    std::cout << "[DIFAT_CHAINS] Read first 109 links to chains." << std::endl;
+    //std::cout << "[DIFAT_CHAINS] Read first 109 links to chains." << std::endl;
     for (int i = 0; i < 109; i++)
     {
         _difatChains.push_back(fBinStream.getData<unsigned int>(0x4C + i * sizeof(unsigned int)));
@@ -89,7 +89,7 @@ void WindowsCompoundBinaryFileFormatReader::readDIFATChains(BinaryStreamWrapper&
 
     if (this->_firstSectorsOffset_DIFAT != endOfChain)
     {
-        std::cout << "[DIFAT_CHAINS] Read other links to chains(File size > 8.5MB)." << std::endl;
+        //std::cout << "[DIFAT_CHAINS] Read other links to chains(File size > 8.5MB)." << std::endl;
         unsigned int sectorSize = 1 << this->_sectorShift_FAT;
         unsigned int nextDiFatOffset = this->_firstSectorsOffset_DIFAT;
 
@@ -126,6 +126,27 @@ void WindowsCompoundBinaryFileFormatReader::readFATChains(BinaryStreamWrapper& f
               this->_fatChains.push_back(fBinStream.getData<unsigned int>(sectorOffset + i));
          }
      }
+}
+
+void WindowsCompoundBinaryFileFormatReader::readMiniFATChains(BinaryStreamWrapper& fBinStream)
+{
+    unsigned int sectorSize = 1 << this->_sectorShift_FAT;
+    unsigned int nextSectorOffset = this->_firstSectorsOffset_MiniFAT;
+    this->_miniFatChains.reserve(sectorSize / sizeof(unsigned int) * this->_sectorsAmount_MiniFAT);
+
+    for (unsigned int i = 0; i < this->_sectorsAmount_MiniFAT && nextSectorOffset != endOfChain; i++)
+    {
+        unsigned int sectorOffset = (nextSectorOffset + 1) << this->_sectorShift_FAT;
+        for (unsigned int i = 0; i < sectorSize; i += sizeof(int))
+        {
+             this->_miniFatChains.push_back(fBinStream.getData<unsigned int>(sectorOffset + i));
+        }
+        /*
+        // Suka.
+        if (std::find(this->_fatChains.begin(), this->_fatChains.end(), ))
+        nextSectorOffset;
+        */
+    }
 }
 
 

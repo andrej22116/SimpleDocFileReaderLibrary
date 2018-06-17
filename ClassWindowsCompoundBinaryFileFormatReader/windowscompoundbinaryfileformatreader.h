@@ -8,11 +8,12 @@
 #include <vector>
 
 #include "../ClassBinaryStreamWrapper/binarystreamwrapper.hpp"
+//#include "variablevisualize.hpp"
 
 
 ////////// Constants
 // End of data chain in sectors.
-const unsigned int endOfChain = 0xFFFFFFEF;
+const unsigned int endOfChain = 0xFFFFFFFE;
 
 // End of data chain in sectors.
 const unsigned int clearSector = 0xFFFFFFFF;
@@ -76,6 +77,7 @@ private:
     void readHeader(BinaryStreamWrapper& fBinStream);
     void readDIFATChains(BinaryStreamWrapper& fBinStream);
     void readFATChains(BinaryStreamWrapper& fBinStream);
+    void readMiniFATChains(BinaryStreamWrapper& fBinStream);
 };
 
 #endif // WINDOWSCOMPOUNDBINARYFILEFORMATREADER_H
