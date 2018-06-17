@@ -86,14 +86,18 @@ int main()
         for (int i = 0; i < 7; i++)
         {
             auto dir = fBinStream.getData<WCBFF_DirectoryEntry>(((header.fatDirSectorAddres + 1) << header.sectorShift) + sizeof(WCBFF_DirectoryEntry) * i);
-            std::cout << "Element name: " << convert_UTF16_To_UTF8(u16string((char16_t*)dir.elementName)) << std::endl;
+            std::string streamName = convert_UTF16_To_UTF8(u16string((char16_t*)dir.elementName));
+            std::cout << "Element name: " << streamName << std::endl;
+            showDataInTableLine("Struct size", sizeof(WCBFF_DirectoryEntry));
             showDataInTableLine("Object type", dir.objectType);
             showDataInTableLine("Color on tree", dir.colorOnTree);
             showDataInTableLine("Left sibling sid", dir.leftSiblingSid);
             showDataInTableLine("Right sibling sid", dir.rightSiblingSid);
             showDataInTableLine("Child sid", dir.childSid);
-            showDataInTableLine("Create time", dir.createTime.lowDateTime);
-            showDataInTableLine("Modify time", dir.modifyTime.highDateTime);
+            showDataInTableLine("Create time low", dir.createTime.lowDateTime);
+            showDataInTableLine("Create time high", dir.createTime.highDateTime);
+            showDataInTableLine("Modify time low", dir.modifyTime.lowDateTime);
+            showDataInTableLine("Modify time high", dir.modifyTime.highDateTime);
             showDataInTableLine("Sector start stream", dir.sectorStartStream);
             showDataInTableLine("Stream size", dir.streamSize);
             std::cout << "Create time: " << convert_FileTime_To_UTF8(dir.createTime) << std::endl;
@@ -101,12 +105,15 @@ int main()
             std::cout << std::endl;
         }
 
+        fin.close();
+
     }
-    /*
+
     {
         ifstream fin("TestDoc.doc", ios::binary);
         WindowsCompoundBinaryFileFormatReader lol(fin);
     }
+    /*
     {
         //ifstream fin("MakeFile", ios::binary);
         //WindowsCompoundBinaryFileFormatReader lol(fin);

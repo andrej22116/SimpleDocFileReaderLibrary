@@ -6,76 +6,37 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <map>
 
 #include "../ClassBinaryStreamWrapper/binarystreamwrapper.hpp"
+#include "WindowsCompoundBinaryFileformat/wcbff_structures.h"
 //#include "variablevisualize.hpp"
-
-
-////////// Constants
-// End of data chain in sectors.
-const unsigned int endOfChain = 0xFFFFFFFE;
-
-// End of data chain in sectors.
-const unsigned int clearSector = 0xFFFFFFFF;
-
-// Sectors sizes
-const unsigned short sectorSize_FAT_Bytes = 64;
-const unsigned short sectorSize_FAT_Bits = 512;
-
-const unsigned short sectorSize_miniFat_Bytes = 8;
-const unsigned short sectorSize_miniFat_Bits = 64;
-
-// References header begins.
-const unsigned long long validHeaderBegin = 0xE11AB1A1E011CFD0;
-const unsigned long long validOldHeaderBegin = 0xE011CFD00DFC110E;
-////////// ...
-
-
 
 class WindowsCompoundBinaryFileFormatReader
 {
 private:
-    long long _dateOfCreate;
+    WCBFF_FileHeader _header;
+    uint32_t _sectorSize;
 
-    // FAT
-    unsigned short _sectorShift_FAT = 0;
-    unsigned int _sectorsAmount_FAT = 0;
-    unsigned int _firstSectorsOffset_FAT = 0;
-    std::vector<unsigned int> _fatChains;
-    std::vector<unsigned int> _fatEntries;
+    std::map<uint32_t, std::vector<uint32_t>> _fatChains;
+    std::map<uint32_t, std::vector<uint32_t>> _miniFatChains;
+    //std::vector<uint32_t> _fatEntries;
 
-    // Mini FAT
-    unsigned short _sectorShift_MiniFAT = 0;
-    unsigned int _sectorsAmount_MiniFAT = 0;
-    unsigned int _firstSectorsOffset_MiniFAT = 0;
-    unsigned int _maxStreamSize_miniFAT_Bits = 0;
-    std::vector<unsigned int> _miniFatChains;
-    std::string _miniFAT;       //????
+    //std::string _miniFAT;
 
-    // DIFAT
-    unsigned int _sectorsAmount_DIFAT = 0;
-    unsigned int _firstSectorsOffset_DIFAT = 0;
-    std::vector<unsigned int> _difatChains;
-
-    // Document structure information.
-    unsigned char _version = 3;
-    bool _isLittleEndian = true;
-
-    // Files offset.
-    unsigned int _filesAmount = 0;
-    unsigned int _firstFileOffset = 0;
+    std::vector<uint32_t> _difatChains;
 
     // Memory
-    std::stringbuf _streamBuffer;
-    std::iostream _memoryStream;
+    //std::stringbuf _streamBuffer;
+    //std::iostream _memoryStream;
 public:
     WindowsCompoundBinaryFileFormatReader(std::istream& stream);
 
-    static bool testOnCFB(unsigned long long firstBytesFromFile);
+    static bool testOnWCBFF(uint64_t signature);
 
 private:
     void readHeader(BinaryStreamWrapper& fBinStream);
-    void readDIFATChains(BinaryStreamWrapper& fBinStream);
+    void readDIFChains(BinaryStreamWrapper& fBinStream);
     void readFATChains(BinaryStreamWrapper& fBinStream);
     void readMiniFATChains(BinaryStreamWrapper& fBinStream);
 };

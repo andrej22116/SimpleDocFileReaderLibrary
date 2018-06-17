@@ -3,6 +3,12 @@
 
 #include <cinttypes>
 
+enum WCBFF_ValidSignatures : uint64_t
+{
+    WCBFF_ValidSignature = 0xE11AB1A1E011CFD0,
+    WCBFF_ValidSignature_Old = 0xE011CFD00DFC110E
+};
+
 enum WCBFF_SpecialValues : uint32_t
 {
     WCBFF_DIFSector = 0xFFFFFFFC,

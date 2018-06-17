@@ -1,9 +1,11 @@
+#pragma once
+
 #ifndef VARIABLEVISUALIZE_HPP
 #define VARIABLEVISUALIZE_HPP
 
 #include <sstream>
 
-static void toCharLineToHex(std::string& res, unsigned char* begin, int len)
+static inline void toCharLineToHex(std::string& res, unsigned char* begin, int len)
 {
     char hexSymbols[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
     unsigned char* posOnVariable = begin;
@@ -31,7 +33,7 @@ static void toCharLineToHex(std::string& res, unsigned char* begin, int len)
     res.pop_back();
 }
 
-std::string toHex(const std::string string)
+inline std::string toHex(const std::string string)
 {
     std::string res;
     toCharLineToHex(res, (unsigned char*)(string.data()), string.length());
@@ -39,7 +41,7 @@ std::string toHex(const std::string string)
 }
 
 template<typename T>
-std::string toHex(T variable)
+inline std::string toHex(T variable)
 {
     std::string res;
     toCharLineToHex(res, reinterpret_cast<unsigned char*>(&variable), sizeof(T));
