@@ -11,6 +11,8 @@ WindowsCompoundBinaryFileFormatReader::WindowsCompoundBinaryFileFormatReader(std
     readHeader(fBinStream);
     readDIFChains(fBinStream);
     readFATChains(fBinStream);
+    readMiniFATChains(fBinStream);
+    createFilesStreams(fBinStream);
 }
 
 
@@ -62,16 +64,22 @@ void WindowsCompoundBinaryFileFormatReader::readDIFChains(BinaryStreamWrapper& f
 void WindowsCompoundBinaryFileFormatReader::readFATChains(BinaryStreamWrapper& fBinStream)
 {
     std::vector<uint32_t> chain;
+    std::vector<uint32_t> test;
     for (auto shift : _difatChains)
     {
         uint32_t sectorOffset = (shift + 1) << _header.sectorShift;
-        for (uint32_t i = sizeof(uint32_t); i < _sectorSize; i += sizeof(uint32_t))
+        for (uint32_t i = 0; i < _sectorSize; i += sizeof(uint32_t))
         {
             uint32_t sector = fBinStream.getData<uint32_t>(sectorOffset + i);
-            if (sector == WCBFF_EndOfChain)
+            test.push_back(sector);
+            if (sector == WCBFF_EndOfChain && chain.size() > 0)
             {
                 this->_fatChains[chain[0] - 1] = chain;
                 chain.clear();
+            }
+            else if (sector >= 0xFFFFFFFA)
+            {
+                continue;
             }
             else
             {
@@ -79,6 +87,8 @@ void WindowsCompoundBinaryFileFormatReader::readFATChains(BinaryStreamWrapper& f
             }
         }
     }
+    int i = 0;
+    i++;
 }
 
 void WindowsCompoundBinaryFileFormatReader::readMiniFATChains(BinaryStreamWrapper& fBinStream)
@@ -88,12 +98,55 @@ void WindowsCompoundBinaryFileFormatReader::readMiniFATChains(BinaryStreamWrappe
 
     for (uint32_t i = 0; i < _header.miniFatSectorsAmount; i++)
     {
-        uint32_t minisector = fBinStream.getData<uint32_t>(sectorOffset + i);
-        chain.push_back(minisector);
+        for (uint32_t j = 0; j < _sectorSize; j += sizeof(uint32_t))
+        {
+            uint32_t minisector = fBinStream.getData<uint32_t>(sectorOffset + j);
+            if (minisector == WCBFF_EndOfChain && chain.size() > 0)
+            {
+                this->_miniFatChains[chain[0] - 1] = chain;
+                chain.clear();
+            }
+            else if (minisector >= 0xFFFFFFFA)
+            {
+                continue;
+            }
+            else
+            {
+                chain.push_back(minisector);
+            }
+        }
     }
 }
 
-
+void WindowsCompoundBinaryFileFormatReader::createFilesStreams(BinaryStreamWrapper& fBinStream)
+{
+    std::cout << "\n///////////////////// TEST //////////////////////" << std::endl;
+    for (uint32_t sector : _fatChains[_header.fatDirSectorAddres])
+    {
+        uint32_t offset = sector << _header.sectorShift;
+        for(int i = 0, size = _sectorSize / sizeof(WCBFF_DirectoryEntry); i < size; i++)
+        {
+            auto dir = fBinStream.getData<WCBFF_DirectoryEntry>(offset + sizeof(WCBFF_DirectoryEntry) * i);
+            std::string streamName = convert_UTF16_To_UTF8(std::u16string((char16_t*)dir.elementName));
+            std::cout << "Element name: " << streamName << std::endl;
+            showDataInTableLine("Struct size", sizeof(WCBFF_DirectoryEntry));
+            showDataInTableLine("Object type", dir.objectType);
+            showDataInTableLine("Color on tree", dir.colorOnTree);
+            showDataInTableLine("Left sibling sid", dir.leftSiblingSid);
+            showDataInTableLine("Right sibling sid", dir.rightSiblingSid);
+            showDataInTableLine("Child sid", dir.childSid);
+            showDataInTableLine("Create time low", dir.createTime.lowDateTime);
+            showDataInTableLine("Create time high", dir.createTime.highDateTime);
+            showDataInTableLine("Modify time low", dir.modifyTime.lowDateTime);
+            showDataInTableLine("Modify time high", dir.modifyTime.highDateTime);
+            showDataInTableLine("Sector start stream", dir.sectorStartStream);
+            showDataInTableLine("Stream size", dir.streamSize);
+            std::cout << "Create time: " << convert_FileTime_To_UTF8(dir.createTime) << std::endl;
+            std::cout << "Modify time: " << convert_FileTime_To_UTF8(dir.modifyTime) << std::endl;
+            std::cout << std::endl;
+        }
+    }
+}
 
 
 

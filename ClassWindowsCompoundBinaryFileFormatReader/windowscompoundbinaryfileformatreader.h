@@ -1,12 +1,8 @@
 #ifndef WINDOWSCOMPOUNDBINARYFILEFORMATREADER_H
 #define WINDOWSCOMPOUNDBINARYFILEFORMATREADER_H
 
-
-#include <istream>
-#include <sstream>
-#include <string>
-#include <vector>
-#include <map>
+#include "stdincludes.h"
+#include "ClassStreamsMenager/streamsmenager.h"
 
 #include "../ClassBinaryStreamWrapper/binarystreamwrapper.hpp"
 #include "WindowsCompoundBinaryFileformat/wcbff_structures.h"
@@ -18,17 +14,12 @@ private:
     WCBFF_FileHeader _header;
     uint32_t _sectorSize;
 
+    std::vector<uint32_t> _difatChains;
     std::map<uint32_t, std::vector<uint32_t>> _fatChains;
     std::map<uint32_t, std::vector<uint32_t>> _miniFatChains;
-    //std::vector<uint32_t> _fatEntries;
 
-    //std::string _miniFAT;
+    StreamsMenager _streamsMenager;
 
-    std::vector<uint32_t> _difatChains;
-
-    // Memory
-    //std::stringbuf _streamBuffer;
-    //std::iostream _memoryStream;
 public:
     WindowsCompoundBinaryFileFormatReader(std::istream& stream);
 
@@ -39,6 +30,7 @@ private:
     void readDIFChains(BinaryStreamWrapper& fBinStream);
     void readFATChains(BinaryStreamWrapper& fBinStream);
     void readMiniFATChains(BinaryStreamWrapper& fBinStream);
+    void createFilesStreams(BinaryStreamWrapper& fBinStream);
 };
 
 #endif // WINDOWSCOMPOUNDBINARYFILEFORMATREADER_H
