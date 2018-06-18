@@ -46,6 +46,8 @@ public:
         return result;
     }
 
+    std::string getDataBlock(unsigned long long offset, size_t size);
+
     inline std::size_t getStreamSize() { return _streamSize; }
 
 private:

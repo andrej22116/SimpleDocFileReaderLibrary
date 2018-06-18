@@ -16,9 +16,11 @@ int main()
     std::ios_base::sync_with_stdio(false);
     std::wcout.imbue(std::locale(""));
 
+    std::string docName = "TestDoc_3.doc";
+
     cout << "Hello World!" << endl;
     {
-        ifstream fin("TestDoc.doc", ios::binary);
+        ifstream fin(docName, ios::binary);
         BinaryStreamWrapper fBinStream(fin);
 
         auto header = fBinStream.getData<WCBFF_FileHeader>();
@@ -65,7 +67,7 @@ int main()
     }
 
     {
-        ifstream fin("TestDoc.doc", ios::binary);
+        ifstream fin(docName, ios::binary);
         WindowsCompoundBinaryFileFormatReader lol(fin);
     }
     /*

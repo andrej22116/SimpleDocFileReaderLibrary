@@ -13,6 +13,9 @@ WindowsCompoundBinaryFileFormatReader::WindowsCompoundBinaryFileFormatReader(std
     readFATChains(fBinStream);
     readMiniFATChains(fBinStream);
     createFilesStreams(fBinStream);
+    std::string str = dynamic_cast<std::stringstream&>(_streamsMenager.getStream("WordDocument")).str();
+    str = convert_UTF16_To_UTF8(std::u16string((char16_t*)str.data()));
+    std::cout << str << std::endl;
 }
 
 
@@ -121,30 +124,62 @@ void WindowsCompoundBinaryFileFormatReader::readMiniFATChains(BinaryStreamWrappe
 void WindowsCompoundBinaryFileFormatReader::createFilesStreams(BinaryStreamWrapper& fBinStream)
 {
     std::cout << "\n///////////////////// TEST //////////////////////" << std::endl;
-    for (uint32_t sector : _fatChains[_header.fatDirSectorAddres])
+    uint32_t sector = _fatChains[_header.fatDirSectorAddres][0];
+    std::set<uint32_t> used;
+    std::queue<uint32_t> entryQueue;
+    entryQueue.push(0);
+
+    uint32_t offset = sector << _header.sectorShift;
+    while(!entryQueue.empty())
     {
-        uint32_t offset = sector << _header.sectorShift;
-        for(int i = 0, size = _sectorSize / sizeof(WCBFF_DirectoryEntry); i < size; i++)
+        uint32_t listNumber = entryQueue.front();
+        entryQueue.pop();
+
+        if (used.find(listNumber) != used.end())
         {
-            auto dir = fBinStream.getData<WCBFF_DirectoryEntry>(offset + sizeof(WCBFF_DirectoryEntry) * i);
-            std::string streamName = convert_UTF16_To_UTF8(std::u16string((char16_t*)dir.elementName));
-            std::cout << "Element name: " << streamName << std::endl;
-            showDataInTableLine("Struct size", sizeof(WCBFF_DirectoryEntry));
-            showDataInTableLine("Object type", dir.objectType);
-            showDataInTableLine("Color on tree", dir.colorOnTree);
-            showDataInTableLine("Left sibling sid", dir.leftSiblingSid);
-            showDataInTableLine("Right sibling sid", dir.rightSiblingSid);
-            showDataInTableLine("Child sid", dir.childSid);
-            showDataInTableLine("Create time low", dir.createTime.lowDateTime);
-            showDataInTableLine("Create time high", dir.createTime.highDateTime);
-            showDataInTableLine("Modify time low", dir.modifyTime.lowDateTime);
-            showDataInTableLine("Modify time high", dir.modifyTime.highDateTime);
-            showDataInTableLine("Sector start stream", dir.sectorStartStream);
-            showDataInTableLine("Stream size", dir.streamSize);
-            std::cout << "Create time: " << convert_FileTime_To_UTF8(dir.createTime) << std::endl;
-            std::cout << "Modify time: " << convert_FileTime_To_UTF8(dir.modifyTime) << std::endl;
-            std::cout << std::endl;
+            continue;
         }
+        used.insert(listNumber);
+
+        auto dir = fBinStream.getData<WCBFF_DirectoryEntry>(offset + sizeof(WCBFF_DirectoryEntry) * listNumber);
+        std::string streamName = convert_UTF16_To_UTF8(std::u16string((char16_t*)dir.elementName));
+
+        if (dir.leftSiblingSid  != WCBFF_ClearSector) { entryQueue.push(dir.leftSiblingSid); }
+        if (dir.rightSiblingSid != WCBFF_ClearSector) { entryQueue.push(dir.rightSiblingSid); }
+        if (dir.childSid        != WCBFF_ClearSector) { entryQueue.push(dir.childSid); }
+
+        if (dir.objectType == STGTY_Stream)
+        {
+            _streamsMenager.createStream(listNumber, streamName);
+            auto& stream = _streamsMenager.getStream(listNumber);
+            for (uint32_t streamSector : _fatChains[dir.sectorStartStream])
+            {
+                uint32_t streamOffset = streamSector << _header.sectorShift;
+                for (uint32_t offsetForRead = 0; offsetForRead < _sectorSize; offsetForRead += sizeof(uint64_t))
+                {
+                    uint64_t data = fBinStream.getData<uint64_t>(streamOffset + offsetForRead);
+                    stream.write((char*)&data, sizeof(data));
+                }
+            }
+            stream.seekg(0, stream.beg);
+        }
+
+        std::cout << "Element name: " << streamName << std::endl;
+        showDataInTableLine("Struct size", sizeof(WCBFF_DirectoryEntry));
+        showDataInTableLine("Object type", dir.objectType);
+        showDataInTableLine("Color on tree", dir.colorOnTree);
+        showDataInTableLine("Left sibling sid", dir.leftSiblingSid);
+        showDataInTableLine("Right sibling sid", dir.rightSiblingSid);
+        showDataInTableLine("Child sid", dir.childSid);
+        showDataInTableLine("Create time low", dir.createTime.lowDateTime);
+        showDataInTableLine("Create time high", dir.createTime.highDateTime);
+        showDataInTableLine("Modify time low", dir.modifyTime.lowDateTime);
+        showDataInTableLine("Modify time high", dir.modifyTime.highDateTime);
+        showDataInTableLine("Sector start stream", dir.sectorStartStream);
+        showDataInTableLine("Stream size", dir.streamSize);
+        std::cout << "Create time: " << convert_FileTime_To_UTF8(dir.createTime) << std::endl;
+        std::cout << "Modify time: " << convert_FileTime_To_UTF8(dir.modifyTime) << std::endl;
+        std::cout << std::endl;
     }
 }
 

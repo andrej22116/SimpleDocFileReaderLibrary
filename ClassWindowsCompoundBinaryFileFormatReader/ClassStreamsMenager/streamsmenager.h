@@ -13,7 +13,7 @@ private:
 public:
     StreamsMenager();
 
-    void addStream(uint32_t streamID, const std::string& streamName);
+    void createStream(uint32_t streamID, const std::string& streamName);
 
     std::iostream& getStream(uint32_t streamID);
     std::iostream& getStream(const std::string& streamName);

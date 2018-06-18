@@ -5,7 +5,7 @@ StreamsMenager::StreamsMenager()
 
 }
 
-void StreamsMenager::addStream(uint32_t streamID, const std::string& streamName)
+void StreamsMenager::createStream(uint32_t streamID, const std::string& streamName)
 {
     auto iterator = std::find_if(_streamIdAndNamePairs.begin(),
                               _streamIdAndNamePairs.end(),

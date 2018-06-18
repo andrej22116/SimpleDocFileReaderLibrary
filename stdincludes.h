@@ -3,6 +3,7 @@
 #ifndef STDINCLUDES_H
 #define STDINCLUDES_H
 
+#include <set>
 #include <map>
 #include <queue>
 #include <vector>
