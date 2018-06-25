@@ -3,6 +3,7 @@
 #ifndef VARIABLEVISUALIZE_HPP
 #define VARIABLEVISUALIZE_HPP
 
+#include <string>
 #include <sstream>
 #include <locale>
 #include <codecvt>
@@ -86,7 +87,19 @@ inline void showDataInTableLine(char* msg, T variable)
 inline std::string convert_UTF16_To_UTF8(std::u16string stringUTF16)
 {
     std::wstring_convert<std::codecvt_utf8_utf16<char16_t>,char16_t> conversion;
-    return conversion.to_bytes(stringUTF16);
+    std::string res = conversion.to_bytes(stringUTF16);
+    for (int i = 0; i < res.size(); i++)
+    {
+        if (res[i] < 0x20)
+        {
+            res.erase(res.begin() + i);
+        }
+        else
+        {
+            i++;
+        }
+    }
+    return res;
 }
 
 inline time_t fileTimeToUnix(WCBFF_FileTime& filetime) {

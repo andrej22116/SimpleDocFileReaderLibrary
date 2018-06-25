@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <iterator>
 
 #include "variablevisualize.hpp"
 
@@ -12,10 +13,11 @@ WindowsCompoundBinaryFileFormatReader::WindowsCompoundBinaryFileFormatReader(std
     readDIFChains(fBinStream);
     readFATChains(fBinStream);
     readMiniFATChains(fBinStream);
-    createFilesStreams(fBinStream);
-    std::string str = dynamic_cast<std::stringstream&>(_streamsMenager.getStream("WordDocument")).str();
-    str = convert_UTF16_To_UTF8(std::u16string((char16_t*)str.data()));
-    std::cout << str << std::endl;
+    readDirectoryEntries(fBinStream);
+
+    //std::string str = dynamic_cast<std::stringstream&>(_streamsMenager.getStream("WordDocument")).str();
+    //str = convert_UTF16_To_UTF8(std::u16string((char16_t*)str.data()));
+    //std::cout << str << std::endl;
 }
 
 
@@ -24,6 +26,7 @@ void WindowsCompoundBinaryFileFormatReader::readHeader(BinaryStreamWrapper& fBin
     //std::cout << "\n[_._._._HEADER_._._._]" << std::endl;
     _header = fBinStream.getData<WCBFF_FileHeader>();
     _sectorSize = 1 << _header.sectorShift;
+    _miniSectorSize = 1 << _header.miniSectorShift;
 
     if (!testOnWCBFF(_header.signature))
     {
@@ -55,137 +58,166 @@ void WindowsCompoundBinaryFileFormatReader::readDIFChains(BinaryStreamWrapper& f
             nextDiFatOffset = fBinStream.getData<uint32_t>(sectorBegin + _sectorSize - sizeof(uint32_t));
         }
     }
-
-    _difatChains.erase(
-        std::remove_if(_difatChains.begin(), _difatChains.end(), [](unsigned int addres) {
-            return addres == WCBFF_ClearSector;
-        }),
-        _difatChains.end()
-    );
 }
 
 void WindowsCompoundBinaryFileFormatReader::readFATChains(BinaryStreamWrapper& fBinStream)
 {
-    std::vector<uint32_t> chain;
-    std::vector<uint32_t> test;
     for (auto shift : _difatChains)
     {
         uint32_t sectorOffset = (shift + 1) << _header.sectorShift;
         for (uint32_t i = 0; i < _sectorSize; i += sizeof(uint32_t))
         {
             uint32_t sector = fBinStream.getData<uint32_t>(sectorOffset + i);
-            test.push_back(sector);
-            if (sector == WCBFF_EndOfChain && chain.size() > 0)
-            {
-                this->_fatChains[chain[0] - 1] = chain;
-                chain.clear();
-            }
-            else if (sector >= 0xFFFFFFFA)
-            {
-                continue;
-            }
-            else
-            {
-                chain.push_back(sector);
-            }
+            _fatChains.push_back(sector);
         }
     }
-    int i = 0;
-    i++;
 }
 
 void WindowsCompoundBinaryFileFormatReader::readMiniFATChains(BinaryStreamWrapper& fBinStream)
 {
-    std::vector<uint32_t> chain;
-    uint32_t sectorOffset = (_header.miniFatFirstSectorAddres + 1) << _header.sectorShift;
+    uint32_t sectorOffset = (_header.miniFatChainsFirstSectorAddres + 1) << _header.sectorShift;
 
     for (uint32_t i = 0; i < _header.miniFatSectorsAmount; i++)
     {
         for (uint32_t j = 0; j < _sectorSize; j += sizeof(uint32_t))
         {
             uint32_t minisector = fBinStream.getData<uint32_t>(sectorOffset + j);
-            if (minisector == WCBFF_EndOfChain && chain.size() > 0)
+            _miniFatChains.push_back(minisector);
+        }
+        if (sectorOffset < _fatChains.size())
+        {
+            sectorOffset = _fatChains[sectorOffset];
+        }
+        else
+        {
+            break;
+        }
+    }
+}
+
+void WindowsCompoundBinaryFileFormatReader::readDirectoryEntries(BinaryStreamWrapper& fBinStream)
+{
+    std::cout << "\n///////////////////// TEST //////////////////////" << std::endl;
+
+    uint32_t idForStreams = 0;
+    uint32_t sector = _header.fatDirSectorAddres;
+
+    while( sector != WCBFF_EndOfChain )
+    {
+        uint32_t sectorOffset = (sector + 1) << _header.sectorShift;
+        for (int offsetInSector = 0; offsetInSector < _sectorSize; offsetInSector += sizeof(WCBFF_DirectoryEntry))
+        {
+            auto dir = fBinStream.getData<WCBFF_DirectoryEntry>(sectorOffset + offsetInSector);
+            if ( (fBinStream.getBytesReadedCount() < sizeof(WCBFF_DirectoryEntry))
+                 || (dir.objectType == STGTY_Invalid) )
             {
-                this->_miniFatChains[chain[0] - 1] = chain;
-                chain.clear();
+                break;
             }
-            else if (minisector >= 0xFFFFFFFA)
+
+            _directoryEntrys.push_back(dir);
+
+            std::string streamName = convert_UTF16_To_UTF8(std::u16string((char16_t*)dir.elementName));
+            std::cout << "Element name: " << streamName << std::endl;
+            showDataInTableLine("Object type", dir.objectType);
+            showDataInTableLine("Color on tree", dir.colorOnTree);
+            showDataInTableLine("Left sibling sid", dir.leftSiblingSid);
+            showDataInTableLine("Right sibling sid", dir.rightSiblingSid);
+            showDataInTableLine("Child sid", dir.childSid);
+            showDataInTableLine("Create time low", dir.createTime.lowDateTime);
+            showDataInTableLine("Create time high", dir.createTime.highDateTime);
+            showDataInTableLine("Modify time low", dir.modifyTime.lowDateTime);
+            showDataInTableLine("Modify time high", dir.modifyTime.highDateTime);
+            showDataInTableLine("Sector start stream", dir.sectorStartStream);
+            showDataInTableLine("Stream size", dir.streamSize);
+            std::cout << "Create time: " << convert_FileTime_To_UTF8(dir.createTime) << std::endl;
+            std::cout << "Modify time: " << convert_FileTime_To_UTF8(dir.modifyTime) << std::endl;
+
+            std::cout << std::endl;
+        }
+
+        if (sector < _fatChains.size())
+        {
+            sector = _fatChains[sector];
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    _filesStreams.emplace_back();
+    auto& fStream = fBinStream.getStream();
+    readDataToStream(fStream, _filesStreams[0],
+            _directoryEntrys[0].sectorStartStream,
+            _directoryEntrys[0].streamSize, false);
+    readFilesStreams(fBinStream);
+
+    int i = 0;
+    for (auto& stream : _filesStreams)
+        {
+        BinaryStreamWrapper test(stream);
+        std::cout << "Stream " << i << " size: " << test.getStreamSize() << std::endl;
+        i++;
+    }
+}
+
+void WindowsCompoundBinaryFileFormatReader::readFilesStreams(BinaryStreamWrapper& fBinStream)
+{
+    auto& fStream = fBinStream.getStream();
+
+    for(int streamID = 1; streamID < _directoryEntrys.size(); streamID++)
+    {
+        _filesStreams.emplace_back();
+        if (_directoryEntrys[streamID].streamSize > 0)
+        {
+            if (_directoryEntrys[streamID].streamSize < _header.miniSectorCutoff)
             {
-                continue;
+                readDataToStream(_filesStreams[0], _filesStreams[streamID],
+                                 _directoryEntrys[streamID].sectorStartStream,
+                                 _directoryEntrys[streamID].streamSize, true);
             }
             else
             {
-                chain.push_back(minisector);
+                readDataToStream(fStream, _filesStreams[streamID],
+                                 _directoryEntrys[streamID].sectorStartStream,
+                                 _directoryEntrys[streamID].streamSize, false);
             }
         }
     }
 }
 
-void WindowsCompoundBinaryFileFormatReader::createFilesStreams(BinaryStreamWrapper& fBinStream)
+void WindowsCompoundBinaryFileFormatReader::readDataToStream(std::istream& inputStream, std::ostream& outputStream,
+                       uint32_t firstSector, uint32_t streamSize, bool isMiniFat)
 {
-    std::cout << "\n///////////////////// TEST //////////////////////" << std::endl;
-    uint32_t sector = _fatChains[_header.fatDirSectorAddres][0];
-    std::set<uint32_t> used;
-    std::queue<uint32_t> entryQueue;
-    entryQueue.push(0);
+    uint32_t sectorSize = isMiniFat ? _miniSectorSize : _sectorSize;
+    uint32_t sectorShift = isMiniFat ? _header.miniSectorShift : _header.sectorShift;
+    uint8_t headerOffset = isMiniFat ? 0 : 1;
 
-    uint32_t offset = sector << _header.sectorShift;
-    while(!entryQueue.empty())
+    auto& chein = isMiniFat ? _miniFatChains : _fatChains;
+
+    std::vector<char> buffer(sectorSize, 0);
+
+    uint32_t sector = firstSector;
+    uint32_t bytesNotReaded = streamSize;
+    while (sector != WCBFF_EndOfChain)
     {
-        uint32_t listNumber = entryQueue.front();
-        entryQueue.pop();
-
-        if (used.find(listNumber) != used.end())
+        uint32_t sectorOffset = (sector + headerOffset) << sectorShift;
+        if (sector < chein.size())
         {
-            continue;
+            sector = chein[sector];
         }
-        used.insert(listNumber);
-
-        auto dir = fBinStream.getData<WCBFF_DirectoryEntry>(offset + sizeof(WCBFF_DirectoryEntry) * listNumber);
-        std::string streamName = convert_UTF16_To_UTF8(std::u16string((char16_t*)dir.elementName));
-
-        if (dir.leftSiblingSid  != WCBFF_ClearSector) { entryQueue.push(dir.leftSiblingSid); }
-        if (dir.rightSiblingSid != WCBFF_ClearSector) { entryQueue.push(dir.rightSiblingSid); }
-        if (dir.childSid        != WCBFF_ClearSector) { entryQueue.push(dir.childSid); }
-
-        if (dir.objectType == STGTY_Stream)
+        else
         {
-            _streamsMenager.createStream(listNumber, streamName);
-            auto& stream = _streamsMenager.getStream(listNumber);
-            for (uint32_t streamSector : _fatChains[dir.sectorStartStream])
-            {
-                uint32_t streamOffset = streamSector << _header.sectorShift;
-                for (uint32_t offsetForRead = 0; offsetForRead < _sectorSize; offsetForRead += sizeof(uint64_t))
-                {
-                    uint64_t data = fBinStream.getData<uint64_t>(streamOffset + offsetForRead);
-                    stream.write((char*)&data, sizeof(data));
-                }
-            }
-            stream.seekg(0, stream.beg);
+            break;
         }
 
-        std::cout << "Element name: " << streamName << std::endl;
-        showDataInTableLine("Struct size", sizeof(WCBFF_DirectoryEntry));
-        showDataInTableLine("Object type", dir.objectType);
-        showDataInTableLine("Color on tree", dir.colorOnTree);
-        showDataInTableLine("Left sibling sid", dir.leftSiblingSid);
-        showDataInTableLine("Right sibling sid", dir.rightSiblingSid);
-        showDataInTableLine("Child sid", dir.childSid);
-        showDataInTableLine("Create time low", dir.createTime.lowDateTime);
-        showDataInTableLine("Create time high", dir.createTime.highDateTime);
-        showDataInTableLine("Modify time low", dir.modifyTime.lowDateTime);
-        showDataInTableLine("Modify time high", dir.modifyTime.highDateTime);
-        showDataInTableLine("Sector start stream", dir.sectorStartStream);
-        showDataInTableLine("Stream size", dir.streamSize);
-        std::cout << "Create time: " << convert_FileTime_To_UTF8(dir.createTime) << std::endl;
-        std::cout << "Modify time: " << convert_FileTime_To_UTF8(dir.modifyTime) << std::endl;
-        std::cout << std::endl;
+        uint16_t bytesAmountForCopy = bytesNotReaded >= sectorSize ? sectorSize : bytesNotReaded;
+        inputStream.seekg(sectorOffset, inputStream.beg);
+        inputStream.read(buffer.data(), bytesAmountForCopy);
+        outputStream.write(buffer.data(), bytesAmountForCopy);
+        bytesNotReaded -= bytesAmountForCopy;
     }
 }
-
-
-
-
 
 
 

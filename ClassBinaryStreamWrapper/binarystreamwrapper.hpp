@@ -46,9 +46,9 @@ public:
         return result;
     }
 
-    std::string getDataBlock(unsigned long long offset, size_t size);
-
+    inline std::size_t getBytesReadedCount() { return _stream->gcount(); }
     inline std::size_t getStreamSize() { return _streamSize; }
+    inline std::istream& getStream() { return *_stream; }
 
 private:
     void calculateStreamSize();
