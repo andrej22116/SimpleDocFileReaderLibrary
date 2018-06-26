@@ -1,34 +1,14 @@
+#pragma once
+
 #ifndef WINDOWSCOMPOUNDBINARYFILEFORMATREADER_H
 #define WINDOWSCOMPOUNDBINARYFILEFORMATREADER_H
 
 #include "stdincludes.h"
-//#include "ClassStreamsMenager/streamsmenager.h"
-
-#include "../ClassBinaryStreamWrapper/binarystreamwrapper.hpp"
-#include "WindowsCompoundBinaryFileformat/wcbff_structures.h"
-
-#include "ClassInputBinaryStream/inputbinarystream.h"
-//#include "variablevisualize.hpp"
-
-//class InputBinaryStream;
 
 class WindowsCompoundBinaryFileFormatReader
 {
 private:
-    struct _WCBFF_Structure {
-        WCBFF_FileHeader header;
-        uint32_t sectorSize;
-        uint32_t miniSectorSize;
-
-        std::vector<uint32_t> difatChains;
-        std::vector<uint32_t> fatChains;
-        std::vector<uint32_t> miniFatChains;
-        std::vector<WCBFF_DirectoryEntry> directoryEntrys;
-
-        InputBinaryStream& iStream;
-
-        _WCBFF_Structure(InputBinaryStream& iStream) : iStream(iStream){}
-    };
+    struct _WCBFF_Structure;
 
     std::map<std::string, uint32_t> _filesStreamsNames;
     std::vector<std::stringstream> _filesStreams;
@@ -46,7 +26,7 @@ public:
     static bool testOnWCBFF(uint64_t signature);
 
 private:
-    void read(InputBinaryStream& stream);
+    void read(_WCBFF_Structure& fileStructure);
     void readHeader(_WCBFF_Structure& fileStructure);
     void readDIFChains(_WCBFF_Structure& fileStructure);
     void readFATChains(_WCBFF_Structure& fileStructure);

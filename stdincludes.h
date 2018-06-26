@@ -8,10 +8,16 @@
 #include <queue>
 #include <vector>
 
+#include <cinttypes>
+
+#include <iostream>
+#include <fstream>
 #include <sstream>
+
 #include <memory>
 #include <algorithm>
 
-#include <cinttypes>
+#include <locale>
+#include <codecvt>
 
 #endif // STDINCLUDES_H

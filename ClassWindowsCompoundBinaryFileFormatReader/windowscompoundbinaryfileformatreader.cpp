@@ -1,19 +1,32 @@
 #include "windowscompoundbinaryfileformatreader.h"
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <algorithm>
-#include <iterator>
 
 #include "variablevisualize.hpp"
-
+#include "wcbff_structures.h"
 #include "ClassInputBinaryStream/inputbinarystream.h"
+
+
+struct WindowsCompoundBinaryFileFormatReader::_WCBFF_Structure {
+    WCBFF_FileHeader header;
+    uint32_t sectorSize;
+    uint32_t miniSectorSize;
+
+    std::vector<uint32_t> difatChains;
+    std::vector<uint32_t> fatChains;
+    std::vector<uint32_t> miniFatChains;
+    std::vector<WCBFF_DirectoryEntry> directoryEntrys;
+
+    InputBinaryStream& iStream;
+
+    _WCBFF_Structure(InputBinaryStream& iStream) : iStream(iStream){}
+};
+
 
 WindowsCompoundBinaryFileFormatReader::WindowsCompoundBinaryFileFormatReader(std::istream& stream)
 {
     //stream.rdbuf();
     InputBinaryStream binStream(stream.rdbuf());
-    read(binStream);
+    _WCBFF_Structure fileStructure(binStream);
+    read(fileStructure);
 }
 
 
@@ -25,13 +38,13 @@ WindowsCompoundBinaryFileFormatReader::WindowsCompoundBinaryFileFormatReader(con
         throw std::runtime_error("File " + filename + " not found!");
     }
     InputBinaryStream binStream(file.rdbuf());
-    read(binStream);
+    _WCBFF_Structure fileStructure(binStream);
+    read(fileStructure);
 }
 
 
-void WindowsCompoundBinaryFileFormatReader::read(InputBinaryStream& stream)
+void WindowsCompoundBinaryFileFormatReader::read(_WCBFF_Structure& fileStructure)
 {
-    _WCBFF_Structure fileStructure(stream);
     readHeader(fileStructure);
     readDIFChains(fileStructure);
     readFATChains(fileStructure);

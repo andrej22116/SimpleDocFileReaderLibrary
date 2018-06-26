@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef WCBFF_STRUCTURES_H
 #define WCBFF_STRUCTURES_H
 

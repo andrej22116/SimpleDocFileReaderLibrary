@@ -3,10 +3,7 @@
 #ifndef VARIABLEVISUALIZE_HPP
 #define VARIABLEVISUALIZE_HPP
 
-#include <string>
-#include <sstream>
-#include <locale>
-#include <codecvt>
+#include "stdincludes.h"
 
 #define WINDOWS_TICK 10000000
 #define SEC_TO_UNIX_EPOCH 11644473600LL
@@ -102,6 +99,7 @@ inline std::string convert_UTF16_To_UTF8(std::u16string stringUTF16)
     return res;
 }
 
+/*
 inline time_t fileTimeToUnix(WCBFF_FileTime& filetime) {
     long long ll_filetime = filetime.lowDateTime + (((long long)filetime.highDateTime) << 32);
     return (time_t)(ll_filetime / WINDOWS_TICK - SEC_TO_UNIX_EPOCH);
@@ -112,5 +110,6 @@ inline std::string convert_FileTime_To_UTF8(WCBFF_FileTime& fileTime)
     time_t thisTime = fileTimeToUnix(fileTime);
     return std::string(ctime(&thisTime));
 }
+*/
 
 #endif // VARIABLEVISUALIZE_H
