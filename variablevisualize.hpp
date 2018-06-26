@@ -88,7 +88,7 @@ inline std::string convert_UTF16_To_UTF8(std::u16string stringUTF16)
 {
     std::wstring_convert<std::codecvt_utf8_utf16<char16_t>,char16_t> conversion;
     std::string res = conversion.to_bytes(stringUTF16);
-    for (int i = 0; i < res.size(); i++)
+    for (size_t i = 0; i < res.size(); i++)
     {
         if (res[i] < 0x20)
         {

@@ -9,7 +9,8 @@ SOURCES += \
     ClassContainer/container.cpp \
     ClassContainer/ClassTextContainer/textcontainer.cpp \
     ClassWindowsCompoundBinaryFileFormatReader/windowscompoundbinaryfileformatreader.cpp \
-    ClassWindowsCompoundBinaryFileFormatReader/ClassStreamsMenager/streamsmenager.cpp
+    ClassWindowsCompoundBinaryFileFormatReader/ClassStreamsMenager/streamsmenager.cpp \
+    ClassInputBinaryStream/inputbinarystream.cpp
 
 HEADERS += \
     ClassBinaryStreamWrapper/binarystreamwrapper.hpp \
@@ -19,4 +20,5 @@ HEADERS += \
     variablevisualize.hpp \
     WindowsCompoundBinaryFileformat/wcbff_structures.h \
     ClassWindowsCompoundBinaryFileFormatReader/ClassStreamsMenager/streamsmenager.h \
-    stdincludes.h
+    stdincludes.h \
+    ClassInputBinaryStream/inputbinarystream.h

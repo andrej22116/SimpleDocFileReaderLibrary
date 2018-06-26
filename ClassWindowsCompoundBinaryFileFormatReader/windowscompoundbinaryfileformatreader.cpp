@@ -1,92 +1,114 @@
 #include "windowscompoundbinaryfileformatreader.h"
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <algorithm>
 #include <iterator>
 
 #include "variablevisualize.hpp"
 
+#include "ClassInputBinaryStream/inputbinarystream.h"
+
 WindowsCompoundBinaryFileFormatReader::WindowsCompoundBinaryFileFormatReader(std::istream& stream)
 {
-    BinaryStreamWrapper fBinStream(stream);
-    readHeader(fBinStream);
-    readDIFChains(fBinStream);
-    readFATChains(fBinStream);
-    readMiniFATChains(fBinStream);
-    readDirectoryEntries(fBinStream);
-
-    //std::string str = dynamic_cast<std::stringstream&>(_streamsMenager.getStream("WordDocument")).str();
-    //str = convert_UTF16_To_UTF8(std::u16string((char16_t*)str.data()));
-    //std::cout << str << std::endl;
+    //stream.rdbuf();
+    InputBinaryStream binStream(stream.rdbuf());
+    read(binStream);
 }
 
 
-void WindowsCompoundBinaryFileFormatReader::readHeader(BinaryStreamWrapper& fBinStream)
+WindowsCompoundBinaryFileFormatReader::WindowsCompoundBinaryFileFormatReader(const std::string& filename)
 {
-    //std::cout << "\n[_._._._HEADER_._._._]" << std::endl;
-    _header = fBinStream.getData<WCBFF_FileHeader>();
-    _sectorSize = 1 << _header.sectorShift;
-    _miniSectorSize = 1 << _header.miniSectorShift;
+    std::ifstream file(filename, std::ios::binary);
+    if (!file)
+    {
+        throw std::runtime_error("File " + filename + " not found!");
+    }
+    InputBinaryStream binStream(file.rdbuf());
+    read(binStream);
+}
 
-    if (!testOnWCBFF(_header.signature))
+
+void WindowsCompoundBinaryFileFormatReader::read(InputBinaryStream& stream)
+{
+    _WCBFF_Structure fileStructure(stream);
+    readHeader(fileStructure);
+    readDIFChains(fileStructure);
+    readFATChains(fileStructure);
+    readMiniFATChains(fileStructure);
+    readDirectoryEntries(fileStructure);
+}
+
+
+void WindowsCompoundBinaryFileFormatReader::readHeader(_WCBFF_Structure& fileStructure)
+{
+    fileStructure.header = fileStructure.iStream.getData<WCBFF_FileHeader>();
+    fileStructure.sectorSize = 1 << fileStructure.header.sectorShift;
+    fileStructure.miniSectorSize = 1 << fileStructure.header.miniSectorShift;
+
+    if (!testOnWCBFF(fileStructure.header.signature))
     {
         throw std::runtime_error("Invalid document header.");
     }
 }
 
-void WindowsCompoundBinaryFileFormatReader::readDIFChains(BinaryStreamWrapper& fBinStream)
+
+void WindowsCompoundBinaryFileFormatReader::readDIFChains(_WCBFF_Structure& fileStructure)
 {
-    //std::cout << "\n[_._._._DIFAT_CHAINS_._._._]" << std::endl;
-    _difatChains.reserve(110);
+    fileStructure.difatChains.reserve(110);
 
     for (int i = 0; i < 109; i++)
     {
-        _difatChains.push_back(_header.firstFatSectors[i]);
+        fileStructure.difatChains.push_back(fileStructure.header.firstFatSectors[i]);
     }
 
-    if (_header.difFirstSectorAddres != WCBFF_EndOfChain)
+    if (fileStructure.header.difFirstSectorAddres != WCBFF_EndOfChain)
     {
-        uint32_t nextDiFatOffset = _header.difFirstSectorAddres;
+        uint32_t nextDiFatOffset = fileStructure.header.difFirstSectorAddres;
 
-        for (uint32_t i = 0; i < _header.difSectorsAmount && nextDiFatOffset != WCBFF_EndOfChain; i++)
+        for (uint32_t i = 0; i < fileStructure.header.difSectorsAmount && nextDiFatOffset != WCBFF_EndOfChain; i++)
         {
-            uint32_t sectorBegin = (nextDiFatOffset + 1) << _header.sectorShift;
-            for (uint32_t j = 0, size = _sectorSize - sizeof(uint32_t); j < size; j += sizeof(uint32_t))
+            uint32_t sectorBegin = (nextDiFatOffset + 1) << fileStructure.header.sectorShift;
+            for (uint32_t j = 0, size = fileStructure.sectorSize - sizeof(uint32_t); j < size; j += sizeof(uint32_t))
             {
-                _difatChains.push_back(fBinStream.getData<uint32_t>(sectorBegin + j));
+                fileStructure.difatChains.push_back(fileStructure.iStream.getData<uint32_t>(sectorBegin + j));
             }
-            nextDiFatOffset = fBinStream.getData<uint32_t>(sectorBegin + _sectorSize - sizeof(uint32_t));
+            nextDiFatOffset = fileStructure.iStream.getData<uint32_t>(sectorBegin
+                                                                         + fileStructure.sectorSize
+                                                                         - sizeof(uint32_t));
         }
     }
 }
 
-void WindowsCompoundBinaryFileFormatReader::readFATChains(BinaryStreamWrapper& fBinStream)
+
+void WindowsCompoundBinaryFileFormatReader::readFATChains(_WCBFF_Structure& fileStructure)
 {
-    for (auto shift : _difatChains)
+    for (auto shift : fileStructure.difatChains)
     {
-        uint32_t sectorOffset = (shift + 1) << _header.sectorShift;
-        for (uint32_t i = 0; i < _sectorSize; i += sizeof(uint32_t))
+        uint32_t sectorOffset = (shift + 1) << fileStructure.header.sectorShift;
+        for (uint32_t i = 0; i < fileStructure.sectorSize; i += sizeof(uint32_t))
         {
-            uint32_t sector = fBinStream.getData<uint32_t>(sectorOffset + i);
-            _fatChains.push_back(sector);
+            uint32_t sector = fileStructure.iStream.getData<uint32_t>(sectorOffset + i);
+            fileStructure.fatChains.push_back(sector);
         }
     }
 }
 
-void WindowsCompoundBinaryFileFormatReader::readMiniFATChains(BinaryStreamWrapper& fBinStream)
-{
-    uint32_t sectorOffset = (_header.miniFatChainsFirstSectorAddres + 1) << _header.sectorShift;
 
-    for (uint32_t i = 0; i < _header.miniFatSectorsAmount; i++)
+void WindowsCompoundBinaryFileFormatReader::readMiniFATChains(_WCBFF_Structure& fileStructure)
+{
+    uint32_t sectorOffset = (fileStructure.header.miniFatChainsFirstSectorAddres + 1) << fileStructure.header.sectorShift;
+
+    for (uint32_t i = 0; i < fileStructure.header.miniFatSectorsAmount; i++)
     {
-        for (uint32_t j = 0; j < _sectorSize; j += sizeof(uint32_t))
+        for (uint32_t j = 0; j < fileStructure.sectorSize; j += sizeof(uint32_t))
         {
-            uint32_t minisector = fBinStream.getData<uint32_t>(sectorOffset + j);
-            _miniFatChains.push_back(minisector);
+            uint32_t minisector = fileStructure.iStream.getData<uint32_t>(sectorOffset + j);
+            fileStructure.miniFatChains.push_back(minisector);
         }
-        if (sectorOffset < _fatChains.size())
+        if (sectorOffset < fileStructure.fatChains.size())
         {
-            sectorOffset = _fatChains[sectorOffset];
+            sectorOffset = fileStructure.fatChains[sectorOffset];
         }
         else
         {
@@ -95,28 +117,30 @@ void WindowsCompoundBinaryFileFormatReader::readMiniFATChains(BinaryStreamWrappe
     }
 }
 
-void WindowsCompoundBinaryFileFormatReader::readDirectoryEntries(BinaryStreamWrapper& fBinStream)
-{
-    std::cout << "\n///////////////////// TEST //////////////////////" << std::endl;
 
-    uint32_t idForStreams = 0;
-    uint32_t sector = _header.fatDirSectorAddres;
+void WindowsCompoundBinaryFileFormatReader::readDirectoryEntries(_WCBFF_Structure& fileStructure)
+{
+    uint32_t sector = fileStructure.header.fatDirSectorAddres;
 
     while( sector != WCBFF_EndOfChain )
     {
-        uint32_t sectorOffset = (sector + 1) << _header.sectorShift;
-        for (int offsetInSector = 0; offsetInSector < _sectorSize; offsetInSector += sizeof(WCBFF_DirectoryEntry))
+        uint32_t sectorOffset = (sector + 1) << fileStructure.header.sectorShift;
+        for (uint32_t offsetInSector = 0;
+             offsetInSector < fileStructure.sectorSize;
+             offsetInSector += sizeof(WCBFF_DirectoryEntry))
         {
-            auto dir = fBinStream.getData<WCBFF_DirectoryEntry>(sectorOffset + offsetInSector);
-            if ( (fBinStream.getBytesReadedCount() < sizeof(WCBFF_DirectoryEntry))
+            auto dir = fileStructure.iStream.getData<WCBFF_DirectoryEntry>(sectorOffset + offsetInSector);
+            if ( (static_cast<uint64_t>(fileStructure.iStream.gcount()) < sizeof(WCBFF_DirectoryEntry))
                  || (dir.objectType == STGTY_Invalid) )
             {
                 break;
             }
 
-            _directoryEntrys.push_back(dir);
-
+            fileStructure.directoryEntrys.push_back(dir);
             std::string streamName = convert_UTF16_To_UTF8(std::u16string((char16_t*)dir.elementName));
+            _filesStreamsNames[streamName] = fileStructure.directoryEntrys.size() - 1;
+
+            /*
             std::cout << "Element name: " << streamName << std::endl;
             showDataInTableLine("Object type", dir.objectType);
             showDataInTableLine("Color on tree", dir.colorOnTree);
@@ -133,11 +157,12 @@ void WindowsCompoundBinaryFileFormatReader::readDirectoryEntries(BinaryStreamWra
             std::cout << "Modify time: " << convert_FileTime_To_UTF8(dir.modifyTime) << std::endl;
 
             std::cout << std::endl;
+            */
         }
 
-        if (sector < _fatChains.size())
+        if (sector < fileStructure.fatChains.size())
         {
-            sector = _fatChains[sector];
+            sector = fileStructure.fatChains[sector];
         }
         else
         {
@@ -146,12 +171,11 @@ void WindowsCompoundBinaryFileFormatReader::readDirectoryEntries(BinaryStreamWra
     }
 
     _filesStreams.emplace_back();
-    auto& fStream = fBinStream.getStream();
-    readDataToStream(fStream, _filesStreams[0],
-            _directoryEntrys[0].sectorStartStream,
-            _directoryEntrys[0].streamSize, false);
-    readFilesStreams(fBinStream);
-
+    readDataToStream(fileStructure, fileStructure.iStream, _filesStreams[0],
+            fileStructure.directoryEntrys[0].sectorStartStream,
+            fileStructure.directoryEntrys[0].streamSize, false);
+    readFilesStreams(fileStructure);
+    /*
     int i = 0;
     for (auto& stream : _filesStreams)
         {
@@ -159,41 +183,43 @@ void WindowsCompoundBinaryFileFormatReader::readDirectoryEntries(BinaryStreamWra
         std::cout << "Stream " << i << " size: " << test.getStreamSize() << std::endl;
         i++;
     }
+    */
 }
 
-void WindowsCompoundBinaryFileFormatReader::readFilesStreams(BinaryStreamWrapper& fBinStream)
-{
-    auto& fStream = fBinStream.getStream();
 
-    for(int streamID = 1; streamID < _directoryEntrys.size(); streamID++)
+void WindowsCompoundBinaryFileFormatReader::readFilesStreams(_WCBFF_Structure& fileStructure)
+{
+    for(size_t streamID = 1; streamID < fileStructure.directoryEntrys.size(); streamID++)
     {
         _filesStreams.emplace_back();
-        if (_directoryEntrys[streamID].streamSize > 0)
+        if (fileStructure.directoryEntrys[streamID].streamSize > 0)
         {
-            if (_directoryEntrys[streamID].streamSize < _header.miniSectorCutoff)
+            if (fileStructure.directoryEntrys[streamID].streamSize < fileStructure.header.miniSectorCutoff)
             {
-                readDataToStream(_filesStreams[0], _filesStreams[streamID],
-                                 _directoryEntrys[streamID].sectorStartStream,
-                                 _directoryEntrys[streamID].streamSize, true);
+                readDataToStream(fileStructure, _filesStreams[0], _filesStreams[streamID],
+                                 fileStructure.directoryEntrys[streamID].sectorStartStream,
+                                 fileStructure.directoryEntrys[streamID].streamSize, true);
             }
             else
             {
-                readDataToStream(fStream, _filesStreams[streamID],
-                                 _directoryEntrys[streamID].sectorStartStream,
-                                 _directoryEntrys[streamID].streamSize, false);
+                readDataToStream(fileStructure, fileStructure.iStream, _filesStreams[streamID],
+                                 fileStructure.directoryEntrys[streamID].sectorStartStream,
+                                 fileStructure.directoryEntrys[streamID].streamSize, false);
             }
         }
     }
 }
 
-void WindowsCompoundBinaryFileFormatReader::readDataToStream(std::istream& inputStream, std::ostream& outputStream,
-                       uint32_t firstSector, uint32_t streamSize, bool isMiniFat)
+
+void WindowsCompoundBinaryFileFormatReader::readDataToStream(_WCBFF_Structure& fileStructure,
+                      std::istream& inputStream, std::ostream& outputStream,
+                      uint32_t firstSector, uint32_t streamSize, bool isMiniFat)
 {
-    uint32_t sectorSize = isMiniFat ? _miniSectorSize : _sectorSize;
-    uint32_t sectorShift = isMiniFat ? _header.miniSectorShift : _header.sectorShift;
+    uint32_t sectorSize = isMiniFat ? fileStructure.miniSectorSize : fileStructure.sectorSize;
+    uint32_t sectorShift = isMiniFat ? fileStructure.header.miniSectorShift : fileStructure.header.sectorShift;
     uint8_t headerOffset = isMiniFat ? 0 : 1;
 
-    auto& chein = isMiniFat ? _miniFatChains : _fatChains;
+    auto& chein = isMiniFat ? fileStructure.miniFatChains : fileStructure.fatChains;
 
     std::vector<char> buffer(sectorSize, 0);
 
@@ -219,6 +245,42 @@ void WindowsCompoundBinaryFileFormatReader::readDataToStream(std::istream& input
     }
 }
 
+
+
+
+uint32_t WindowsCompoundBinaryFileFormatReader::getStreamIdByName(std::string streamName)
+{
+    auto iter = _filesStreamsNames.find(streamName);
+    if (iter != _filesStreamsNames.end())
+    {
+        return iter->second;
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+
+std::istream& WindowsCompoundBinaryFileFormatReader::getStreamById(uint32_t streamID)
+{
+    if (streamID >= _filesStreams.size())
+    {
+        throw std::runtime_error("A stream with such an ID does not exist!");
+    }
+    return _filesStreams[streamID];
+}
+
+
+std::vector<std::pair<std::string, uint32_t>> WindowsCompoundBinaryFileFormatReader::getListOfStreams()
+{
+    std::vector<std::pair<std::string, uint32_t>> result;
+    for (auto& streamNameAndId : _filesStreamsNames)
+    {
+        result.push_back(streamNameAndId);
+    }
+    return result;
+}
 
 
 bool WindowsCompoundBinaryFileFormatReader::testOnWCBFF(uint64_t signature)

@@ -17,7 +17,7 @@ int main()
     std::wcout.imbue(std::locale(""));
 
     std::string docName = "TestDoc.doc";
-
+/*
     ifstream fin(docName, ios::binary);
     BinaryStreamWrapper fBinStream(fin);
     auto header = fBinStream.peekData<WCBFF_FileHeader>();
@@ -36,7 +36,8 @@ int main()
     showDataInTableLine("DIF first sector addres", header.difFirstSectorAddres);
     showDataInTableLine("DIF sectors amount", header.difSectorsAmount);
     std::cout << std::endl;
-    WindowsCompoundBinaryFileFormatReader lol(fin);
+    */
+    WindowsCompoundBinaryFileFormatReader lol(docName);
     /*
     {
         //ifstream fin("MakeFile", ios::binary);
