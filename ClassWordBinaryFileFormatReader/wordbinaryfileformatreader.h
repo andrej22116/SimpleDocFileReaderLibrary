@@ -31,11 +31,15 @@ private:
     std::vector<TextContainer> _textContainers;
 
 
-    time_t _timeOfCreate;
-    time_t _timeOfModify;
+    time_t _timeLastSave;
+    std::string _timeLastSave_str;
+    //time_t _timeOfModify;
 public:
     WordBinaryFileFormatReader(const std::string& fileName);
     WordBinaryFileFormatReader(std::istream& stream);
+
+    inline time_t getLastSaveTime() { return _timeLastSave; }
+    inline std::string getLastSaveTime_str() { return _timeLastSave_str; }
 
     inline const std::vector<TextContainer>& getContainers();
 
@@ -50,20 +54,24 @@ private:
 
     void readClxArray(FIB_RgFcLcb97& fibEnd);
 
-    // Sheet begin
+    // Shit begin
     void readPrcArray(FIB_RgFcLcb97& fibEnd);
     void readPrcDataArray();
     void readPrlArray(int16_t prlArraySize);
-    // Sheet end
+    // Shit end
 
-    // Next sheet begin
-    void readPcdtArray(FIB_RgFcLcb97& fibEnd);
+    // Next shit begin
+    void readPcdtArray();
     void readPlcPcdArray(uint32_t plcPcdSize);
     void readCpArray(uint32_t lastCpValue);
     void readPlcArray();
-    // Next sheet end
+    // Next shit end
 
-    void makeStrings();
+    void readCharacters();
+    void makeTextContainers(std::string charactersArray);
+
+    void readDateTime(FIB_RgFcLcb97& fibEnd);
+    time_t getTime(uint32_t dwLowDateTime, uint32_t dwHighDateTime);
 
     std::istream& getStream(std::string streamName);
 };

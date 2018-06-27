@@ -697,16 +697,26 @@ struct FcCompressed
 
 struct Pcd
 {
-    struct Bits {
-        unsigned A_fNoParaLast : 1;
-        unsigned B_fR1 : 1;
-        unsigned C_fDirty : 1;
-        unsigned fR2 : 13;
-    } bits;
+    uint16_t bits;
 
     FcCompressed fc;
 
     uint16_t prm;
+};
+
+struct PcdExp
+{
+    unsigned A_fNoParaLast : 1;
+    unsigned B_fR1 : 1;
+    unsigned C_fDirty : 1;
+    unsigned fR2 : 13;
+
+    unsigned fc : 30;
+    unsigned fc_A_fCompressed : 1;
+    unsigned fc_B_r1 : 1;
+
+    unsigned prm_A_fComplex : 1;
+    unsigned prm_data : 15;
 };
 
 #endif // WBFF_STRUCTURES_H

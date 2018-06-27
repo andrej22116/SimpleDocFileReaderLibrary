@@ -13,7 +13,8 @@ public:
     TextContainer(std::string text);
     virtual ~TextContainer() override;
 
-    inline const std::string& getText() { return _text; }
+    inline std::string getText() { return _text; }
+    inline const std::string& watchText() { return _text; }
     //inline const std::string& getFormatedText() { return _formatedText; }
 };
 

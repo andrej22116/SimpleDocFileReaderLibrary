@@ -1,4 +1,5 @@
 #include "wordbinaryfileformatreader.h"
+#include "variablevisualize.hpp"
 //#include "ClassInputBinaryStream/inputbinarystream.h"
 
 //#include "wbff_structures.h"
@@ -86,6 +87,8 @@ void WordBinaryFileFormatReader::readDocument97(FIB_RgFcLcb97& fibEnd)
     std::cout << "FibEnd lcbClx: " << fibEnd.lcbClx << std::endl;
 
     readClxArray(fibEnd);
+    readCharacters();
+    readDateTime(fibEnd);
 
     std::cout << std::endl;
 }
@@ -127,7 +130,7 @@ void WordBinaryFileFormatReader::readDocument07(FIB_RgFcLcb2007& fibEnd)
 void WordBinaryFileFormatReader::readClxArray(FIB_RgFcLcb97& fibEnd)
 {
     readPrcArray(fibEnd);
-    readPcdtArray(fibEnd);
+    readPcdtArray();
 }
 
 
@@ -145,7 +148,6 @@ void WordBinaryFileFormatReader::readPrcArray(FIB_RgFcLcb97& fibEnd)
 
 void WordBinaryFileFormatReader::readPrcDataArray()
 {
-    std::cout << "Hello_1!" << std::endl;
     auto cbGrpprl = _tableStream->getData<int16_t>();
     readPrlArray(cbGrpprl);
 }
@@ -170,7 +172,7 @@ void WordBinaryFileFormatReader::readPrlArray(int16_t prlArraySize)
 
 
 
-void WordBinaryFileFormatReader::readPcdtArray(FIB_RgFcLcb97& fibEnd)
+void WordBinaryFileFormatReader::readPcdtArray()
 {
     while(_tableStream->peekData<uint8_t>() == 0x02)
     {
@@ -182,7 +184,6 @@ void WordBinaryFileFormatReader::readPcdtArray(FIB_RgFcLcb97& fibEnd)
 
 void WordBinaryFileFormatReader::readPlcPcdArray(uint32_t plcPcdSize)
 {
-    std::cout << "Hello_2! plcPcdSize: " << plcPcdSize << std::endl;
     _charactersPositions.reserve(plcPcdSize / sizeof(uint32_t));
 
     FIB_RgLw97& fibLw = _fibBegin->fibLw97;
@@ -195,7 +196,6 @@ void WordBinaryFileFormatReader::readPlcPcdArray(uint32_t plcPcdSize)
 
     readCpArray(lastCP);
     readPlcArray();
-    //_tableStream->seekg(_tableStream->tellg() + plcPcdSize, _tableStream->beg);
 }
 
 
@@ -216,7 +216,7 @@ void WordBinaryFileFormatReader::readPlcArray()
     for (uint32_t i = 1; i < _charactersPositions.size(); i++)
     {
         Pcd pcd;
-        pcd.bits = _tableStream->getData<Pcd::Bits>();
+        pcd.bits = _tableStream->getData<uint16_t>();
         pcd.fc = _tableStream->getData<FcCompressed>();
         pcd.prm = _tableStream->getData<uint16_t>();
         _charactersOffsets.push_back(pcd);
@@ -224,12 +224,73 @@ void WordBinaryFileFormatReader::readPlcArray()
 }
 
 
-void WordBinaryFileFormatReader::makeStrings()
+void WordBinaryFileFormatReader::readCharacters()
 {
+    for (uint32_t i = 0, size = _charactersPositions.size() - 1; i < size; i++)
+    {
+        uint32_t symbolsAmount = _charactersPositions[i + 1] - _charactersPositions[i];
+        std::string nextStr(symbolsAmount + 1, 0);
 
+        if (_charactersOffsets[i].fc.a == 0)
+        {
+            std::u16string str(symbolsAmount + 1, 0);
+            _wordDocumentStream->seekg(_charactersOffsets[i].fc.fc, _wordDocumentStream->beg);
+            _wordDocumentStream->read((char*)str.data(), sizeof(char16_t) * symbolsAmount);
+            nextStr = convert_UTF16_To_UTF8(str);
+        }
+        else
+        {
+            _wordDocumentStream->seekg(_charactersOffsets[i].fc.fc, _wordDocumentStream->beg);
+            _wordDocumentStream->read((char*)nextStr.data(), symbolsAmount);
+        }
+
+        makeTextContainers(nextStr);
+    }
+
+
+    for(auto& container : _textContainers)
+    {
+        std::cout << "[ Text ]#> " << container.watchText() << std::endl;
+    }
 }
 
 
+void WordBinaryFileFormatReader::makeTextContainers(std::string charactersArray)
+{
+    std::stringstream ss;
+    for (auto ch : charactersArray)
+    {
+        if (ch >= 32)
+        {
+            ss << ch;
+        }
+        else if (ss.tellp() > 0)
+        {
+            _textContainers.emplace_back(ss.str());
+            ss.str("");
+        }
+    }
+}
+
+
+void WordBinaryFileFormatReader::readDateTime(FIB_RgFcLcb97& fibEnd)
+{
+    _timeLastSave = getTime(fibEnd.dwLowDateTime, fibEnd.dwHighDateTime);
+    std::tm* tm = std::localtime(&_timeLastSave);
+    std::stringstream ss;
+    ss << std::put_time(tm, "Date: %F; Time: %T");
+    _timeLastSave_str = ss.str();
+}
+
+
+time_t WordBinaryFileFormatReader::getTime(uint32_t dwLowDateTime, uint32_t dwHighDateTime)
+{
+    static const uint64_t EPOCH_DIFFERENCE_MICROS = 11644473600LL;
+    uint64_t total_us = ((uint64_t)dwHighDateTime << 32) + dwLowDateTime;
+    //total_us -= EPOCH_DIFFERENCE_MICROS;
+
+    return (time_t)(total_us / 10000000 - EPOCH_DIFFERENCE_MICROS);
+}
 
 std::istream& WordBinaryFileFormatReader::getStream(std::string streamName)
 {
@@ -241,3 +302,4 @@ std::istream& WordBinaryFileFormatReader::getStream(std::string streamName)
 
     return this->getStreamById(streamID);
 }
+
