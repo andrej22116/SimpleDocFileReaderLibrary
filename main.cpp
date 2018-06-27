@@ -11,8 +11,9 @@ int main()
 {
     std::ios_base::sync_with_stdio(false);
     std::wcout.imbue(std::locale(""));
+    //std::locale::global(std::locale("en_US.UTF-8"));
 
-    const std::string docName = "TestDoc.doc";
+    const std::string docName = "TestDoc_3.doc";
     WordBinaryFileFormatReader lol(docName);
 
     std::cout << "\nLast save: " << lol.getLastSaveTime_str() << std::endl;

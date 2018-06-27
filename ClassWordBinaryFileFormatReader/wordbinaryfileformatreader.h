@@ -68,7 +68,7 @@ private:
     // Next shit end
 
     void readCharacters();
-    void makeTextContainers(std::string charactersArray);
+    void makeTextContainers(std::wstring& charactersArray);
 
     void readDateTime(FIB_RgFcLcb97& fibEnd);
     time_t getTime(uint32_t dwLowDateTime, uint32_t dwHighDateTime);

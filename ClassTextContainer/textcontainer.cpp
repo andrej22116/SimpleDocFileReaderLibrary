@@ -1,6 +1,11 @@
 #include "textcontainer.h"
-
-TextContainer::TextContainer(std::string text)
+/*
+TextContainer::TextContainer(const std::wstring& text)
+{
+    _text = text;
+}
+*/
+TextContainer::TextContainer(std::wstring text)
 {
     _text = text;
 }

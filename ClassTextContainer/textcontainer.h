@@ -6,15 +6,16 @@
 class TextContainer : public Container
 {
 private:
-    std::string _text;
+    std::wstring _text;
     //std::string _formatedText;
 
 public:
-    TextContainer(std::string text);
+    //TextContainer(const std::wstring& text);
+    TextContainer(std::wstring text);
     virtual ~TextContainer() override;
 
-    inline std::string getText() { return _text; }
-    inline const std::string& watchText() { return _text; }
+    inline std::wstring getText() { return _text; }
+    inline const std::wstring& watchText() { return _text; }
     //inline const std::string& getFormatedText() { return _formatedText; }
 };
 

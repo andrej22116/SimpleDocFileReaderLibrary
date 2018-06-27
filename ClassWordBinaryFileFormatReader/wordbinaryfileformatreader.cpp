@@ -82,10 +82,6 @@ void WordBinaryFileFormatReader::readDocument97(FIB_RgFcLcb97& fibEnd)
     // Read date for document 1997
     std::cout << "Read version: 1997!" << std::endl;
 
-    std::cout << "FibLw97 ccpText: " << _fibBegin->fibLw97.ccpText << std::endl;
-    std::cout << "FibEnd fcClx: " << fibEnd.fcClx << std::endl;
-    std::cout << "FibEnd lcbClx: " << fibEnd.lcbClx << std::endl;
-
     readClxArray(fibEnd);
     readCharacters();
     readDateTime(fibEnd);
@@ -229,19 +225,26 @@ void WordBinaryFileFormatReader::readCharacters()
     for (uint32_t i = 0, size = _charactersPositions.size() - 1; i < size; i++)
     {
         uint32_t symbolsAmount = _charactersPositions[i + 1] - _charactersPositions[i];
-        std::string nextStr(symbolsAmount + 1, 0);
+        std::wstring nextStr;
 
         if (_charactersOffsets[i].fc.a == 0)
         {
             std::u16string str(symbolsAmount + 1, 0);
             _wordDocumentStream->seekg(_charactersOffsets[i].fc.fc, _wordDocumentStream->beg);
             _wordDocumentStream->read((char*)str.data(), sizeof(char16_t) * symbolsAmount);
-            nextStr = convert_UTF16_To_UTF8(str);
+
+            std::wstring_convert<std::codecvt_utf16<wchar_t, 0x10ffff, std::little_endian>> conversion;
+            nextStr = conversion.from_bytes(
+                        reinterpret_cast<const char*> (&str[0]),
+                        reinterpret_cast<const char*> (&str[0] + str.size()));
+            int a = 0; a++;
         }
         else
         {
-            _wordDocumentStream->seekg(_charactersOffsets[i].fc.fc, _wordDocumentStream->beg);
-            _wordDocumentStream->read((char*)nextStr.data(), symbolsAmount);
+            std::string str(symbolsAmount + 1, 0);
+            _wordDocumentStream->seekg(_charactersOffsets[i].fc.fc / 2, _wordDocumentStream->beg);
+            _wordDocumentStream->read((char*)str.data(), symbolsAmount);
+            nextStr = std::wstring(str.begin(), str.end());
         }
 
         makeTextContainers(nextStr);
@@ -250,24 +253,27 @@ void WordBinaryFileFormatReader::readCharacters()
 
     for(auto& container : _textContainers)
     {
-        std::cout << "[ Text ]#> " << container.watchText() << std::endl;
+        std::wcout << L"[ Text ]#> " << container.watchText() << std::endl;
     }
 }
 
 
-void WordBinaryFileFormatReader::makeTextContainers(std::string charactersArray)
+void WordBinaryFileFormatReader::makeTextContainers(std::wstring& charactersArray)
 {
-    std::stringstream ss;
+   // _textContainers.emplace_back(charactersArray);
+
+    std::wstringstream wss;
     for (auto ch : charactersArray)
     {
         if (ch >= 32)
         {
-            ss << ch;
+            wss << ch;
         }
-        else if (ss.tellp() > 0)
+        else if (wss.tellp() > 0)
         {
-            _textContainers.emplace_back(ss.str());
-            ss.str("");
+            //TextContainer container();
+            _textContainers.emplace_back(wss.str());
+            wss.str(L"");
         }
     }
 }
