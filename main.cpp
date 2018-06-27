@@ -12,7 +12,7 @@ int main()
     std::ios_base::sync_with_stdio(false);
     std::wcout.imbue(std::locale(""));
 
-    const std::string docName = "TestDoc.doc";
+    const std::string docName = "TestDoc_2.doc";
     WordBinaryFileFormatReader lol(docName);
 
     return 0;

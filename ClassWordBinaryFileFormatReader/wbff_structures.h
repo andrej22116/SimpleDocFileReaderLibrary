@@ -51,7 +51,58 @@ struct FIB_Base {
 #define UINT32_TO_LKEY(fib_base_struct, value) \
     *((uint32_t*)fib_base_struct.lKey) = value
 
-struct FIB_RgFcLcb97 {
+struct FIB_RgW97
+{
+    uint16_t reserver_1;
+    uint16_t reserver_2;
+    uint16_t reserver_3;
+    uint16_t reserver_4;
+    uint16_t reserver_5;
+    uint16_t reserver_6;
+    uint16_t reserver_7;
+    uint16_t reserver_8;
+    uint16_t reserver_9;
+    uint16_t reserver_10;
+    uint16_t reserver_11;
+    uint16_t reserver_12;
+    uint16_t reserver_13;
+
+    uint16_t lidFE;
+};
+
+struct FIB_RgLw97
+{
+    uint32_t cbMac;
+
+    int32_t reserver_1;
+    int32_t reserver_2;
+
+    int32_t ccpText;
+    int32_t ccpFtn;
+    int32_t ccpHdd;
+
+    int32_t reserver_3;
+
+    int32_t ccpAtn;
+    int32_t ccpEdn;
+    int32_t ccpTxbx;
+    int32_t ccpHdrTxbx;
+
+    int32_t reserver_4;
+    int32_t reserver_5;
+    int32_t reserver_6;
+    int32_t reserver_7;
+    int32_t reserver_8;
+    int32_t reserver_9;
+    int32_t reserver_10;
+    int32_t reserver_11;
+    int32_t reserver_12;
+    int32_t reserver_13;
+    int32_t reserver_14;
+};
+
+struct FIB_RgFcLcb97
+{
     uint32_t ignore_fcStshfOrig;
     uint32_t ignore_lcbStshfOrig;
 
@@ -332,10 +383,8 @@ struct FIB_RgFcLcb97 {
     uint32_t lcbSttbfUssr;
 };
 
-
-struct FIB_RgFcLcb2000 {
-    FIB_RgFcLcb97 rgFcLcb97;
-
+struct FIB_RgFcLcb2000 : public FIB_RgFcLcb97
+{
     uint32_t fcPlcfTch;
     uint32_t lcbPlcfTch;
 
@@ -382,9 +431,8 @@ struct FIB_RgFcLcb2000 {
     uint32_t lcbBkdEdnOld;
 };
 
-struct FIB_RgFcLcb2002 {
-    FIB_RgFcLcb2000 rgFcLcb2000;
-
+struct FIB_RgFcLcb2002 : public FIB_RgFcLcb2000
+{
     uint32_t ignore_fcUnused1;
     uint32_t ignore_lcbUnused1;
 
@@ -470,9 +518,8 @@ struct FIB_RgFcLcb2002 {
     uint32_t lcbPlcflvcMixedXP;
 };
 
-struct FIB_RgFcLcb2003 {
-    FIB_RgFcLcb2002 rgFcLcb2002;
-
+struct FIB_RgFcLcb2003 : public FIB_RgFcLcb2002
+{
     uint32_t fcHplxsdr;
     uint32_t lcbHplxsdr;
 
@@ -558,65 +605,108 @@ struct FIB_RgFcLcb2003 {
     uint32_t lcbAfd;
 };
 
-struct FIB_RgFcLcb2007 {
-    FIB_RgFcLcb2003 rgFcLcb2003;
+struct FIB_RgFcLcb2007 : public FIB_RgFcLcb2003
+{
+    uint32_t ignore_fcPlcfmthd;
+    uint32_t ignore_lcbPlcfmthd;
 
-    uint32_t fcPlcfmthd;
-    uint32_t lcbPlcfmthd;
+    uint32_t ignore_fcSttbfBkmkMoveFrom;
+    uint32_t ignore_lcbSttbfBkmkMoveFrom;
 
-    uint32_t fcSttbfBkmkMoveFrom;
-    uint32_t lcbSttbfBkmkMoveFrom;
+    uint32_t ignore_fcPlcfBkfMoveFrom;
+    uint32_t ignore_lcbPlcfBkfMoveFrom;
 
-    uint32_t fcPlcfBkfMoveFrom;
-    uint32_t lcbPlcfBkfMoveFrom;
+    uint32_t ignore_fcPlcfBklMoveFrom;
+    uint32_t ignore_lcbPlcfBklMoveFrom;
 
-    uint32_t fcPlcfBklMoveFrom;
-    uint32_t lcbPlcfBklMoveFrom;
+    uint32_t ignore_fcSttbfBkmkMoveTo;
+    uint32_t ignore_lcbSttbfBkmkMoveTo;
 
-    uint32_t fcSttbfBkmkMoveTo;
-    uint32_t lcbSttbfBkmkMoveTo;
+    uint32_t ignore_fcPlcfBkfMoveTo;
+    uint32_t ignore_lcbPlcfBkfMoveTo;
 
-    uint32_t fcPlcfBkfMoveTo;
-    uint32_t lcbPlcfBkfMoveTo;
+    uint32_t ignore_fcPlcfBklMoveTo;
+    uint32_t ignore_lcbPlcfBklMoveTo;
 
-    uint32_t fcPlcfBklMoveTo;
-    uint32_t lcbPlcfBklMoveTo;
+    uint32_t ignore_fcUnused1;
+    uint32_t ignore_lcbUnused1;
 
-    uint32_t fcUnused1;
-    uint32_t lcbUnused1;
+    uint32_t ignore_fcUnused2;
+    uint32_t ignore_lcbUnused2;
 
-    uint32_t fcUnused2;
-    uint32_t lcbUnused2;
+    uint32_t ignore_fcUnused3;
+    uint32_t ignore_lcbUnused3;
 
-    uint32_t fcUnused3;
-    uint32_t lcbUnused3;
+    uint32_t ignore_fcSttbfBkmkArto;
+    uint32_t ignore_lcbSttbfBkmkArto;
 
-    uint32_t fcSttbfBkmkArto;
-    uint32_t lcbSttbfBkmkArto;
+    uint32_t ignore_fcPlcfBkfArto;
+    uint32_t ignore_lcbPlcfBkfArto;
 
-    uint32_t fcPlcfBkfArto;
-    uint32_t lcbPlcfBkfArto;
+    uint32_t ignore_fcPlcfBklArto;
+    uint32_t ignore_lcbPlcfBklArto;
 
-    uint32_t fcPlcfBklArto;
-    uint32_t lcbPlcfBklArto;
+    uint32_t ignore_fcArtoData;
+    uint32_t ignore_lcbArtoData;
 
-    uint32_t fcArtoData;
-    uint32_t lcbArtoData;
+    uint32_t ignore_fcUnused4;
+    uint32_t ignore_lcbUnused4;
 
-    uint32_t fcUnused4;
-    uint32_t lcbUnused4;
+    uint32_t ignore_fcUnused5;
+    uint32_t ignore_lcbUnused5;
 
-    uint32_t fcUnused5;
-    uint32_t lcbUnused5;
+    uint32_t ignore_fcUnused6;
+    uint32_t ignore_lcbUnused6;
 
-    uint32_t fcUnused6;
-    uint32_t lcbUnused6;
+    uint32_t ignore_fcOssTheme;
+    uint32_t ignore_lcbOssTheme;
 
-    uint32_t fcOssTheme;
-    uint32_t lcbOssTheme;
+    uint32_t ignore_fcColorSchemeMapping;
+    uint32_t ignore_lcbColorSchemeMapping;
+};
 
-    uint32_t fcColorSchemeMapping;
-    uint32_t lcbColorSchemeMapping;
+
+struct FIB_RgCswNewData2000
+{
+    uint16_t cQuickSavesNew;
+};
+
+struct FIB_RgCswNewData2007 : public FIB_RgCswNewData2000
+{
+    uint16_t ignore_lidThemeOther;
+    uint16_t ignore_lidThemeFE;
+    uint16_t ignore_lidThemeCS;
+};
+
+
+
+struct Sprm
+{
+    unsigned ispmd : 9;
+    unsigned A : 1;
+    unsigned sgc : 3;
+    unsigned spra : 3;
+};
+
+struct FcCompressed
+{
+    unsigned fc : 30;
+    unsigned a : 1;
+    unsigned b : 1;
+};
+
+struct Pcd
+{
+    struct Bits {
+        unsigned A_fNoParaLast : 1;
+        unsigned B_fR1 : 1;
+        unsigned C_fDirty : 1;
+        unsigned fR2 : 13;
+    } bits;
+
+    FcCompressed fc;
+
+    uint16_t prm;
 };
 
 #endif // WBFF_STRUCTURES_H
