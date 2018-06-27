@@ -7,6 +7,7 @@ class InputBinaryStream : public std::istream
 {
 public:
     InputBinaryStream(std::streambuf* sb) : std::istream(sb) {}
+    InputBinaryStream(std::istream& stream) : std::istream(stream.rdbuf()) {}
 
     template<typename T>
     inline T getData()

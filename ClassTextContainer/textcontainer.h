@@ -1,7 +1,7 @@
 #ifndef TEXTCONTAINER_H
 #define TEXTCONTAINER_H
 
-#include "../container.h"
+#include "ClassContainer/container.h"
 
 class TextContainer : public Container
 {

@@ -18,7 +18,7 @@ public:
     WindowsCompoundBinaryFileFormatReader(const std::string& filename);
 
     inline uint32_t getStreamsAmount() { return _filesStreams.size(); }
-    uint32_t getStreamIdByName(std::string streamName);
+    int32_t getStreamIdByName(std::string streamName);
     std::istream& getStreamById(uint32_t streamID);
     std::vector<std::pair<std::string, uint32_t>> getListOfStreams();
 

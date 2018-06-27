@@ -261,7 +261,7 @@ void WindowsCompoundBinaryFileFormatReader::readDataToStream(_WCBFF_Structure& f
 
 
 
-uint32_t WindowsCompoundBinaryFileFormatReader::getStreamIdByName(std::string streamName)
+int32_t WindowsCompoundBinaryFileFormatReader::getStreamIdByName(std::string streamName)
 {
     auto iter = _filesStreamsNames.find(streamName);
     if (iter != _filesStreamsNames.end())

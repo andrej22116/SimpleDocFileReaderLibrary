@@ -5,18 +5,20 @@ CONFIG -= qt
 
 PRECOMPILED_HEADER = stdincludes.h
 
-SOURCES += \
-        main.cpp \
-    ClassContainer/container.cpp \
-    ClassContainer/ClassTextContainer/textcontainer.cpp \
-    ClassWindowsCompoundBinaryFileFormatReader/windowscompoundbinaryfileformatreader.cpp \
-    ClassInputBinaryStream/inputbinarystream.cpp
-
 HEADERS += \
     ClassContainer/container.h \
-    ClassContainer/ClassTextContainer/textcontainer.h \
-    ClassWindowsCompoundBinaryFileFormatReader/windowscompoundbinaryfileformatreader.h \
-    variablevisualize.hpp \
-    stdincludes.h \
     ClassInputBinaryStream/inputbinarystream.h \
-    ClassWindowsCompoundBinaryFileFormatReader/wcbff_structures.h
+    ClassTextContainer/textcontainer.h \
+    ClassWindowsCompoundBinaryFileFormatReader/wcbff_structures.h \
+    ClassWindowsCompoundBinaryFileFormatReader/windowscompoundbinaryfileformatreader.h \
+    ClassWordBinaryFileFormatReader/wbff_structures.h \
+    ClassWordBinaryFileFormatReader/wordbinaryfileformatreader.h \
+    variablevisualize.hpp
+
+SOURCES += \
+    ClassContainer/container.cpp \
+    ClassInputBinaryStream/inputbinarystream.cpp \
+    ClassTextContainer/textcontainer.cpp \
+    ClassWindowsCompoundBinaryFileFormatReader/windowscompoundbinaryfileformatreader.cpp \
+    ClassWordBinaryFileFormatReader/wordbinaryfileformatreader.cpp \
+    main.cpp
