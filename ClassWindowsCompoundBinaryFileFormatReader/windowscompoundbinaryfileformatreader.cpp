@@ -260,6 +260,12 @@ void WindowsCompoundBinaryFileFormatReader::readDataToStream(_WCBFF_Structure& f
 
 
 
+void WindowsCompoundBinaryFileFormatReader::clearData()
+{
+    _filesStreamsNames.clear();
+    _filesStreams.clear();
+}
+
 
 int32_t WindowsCompoundBinaryFileFormatReader::getStreamIdByName(std::string streamName)
 {

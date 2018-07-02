@@ -22,6 +22,7 @@ public:
     std::istream& getStreamById(uint32_t streamID);
     std::vector<std::pair<std::string, uint32_t>> getListOfStreams();
 
+    void clearData();
 
     static bool testOnWCBFF(uint64_t signature);
 

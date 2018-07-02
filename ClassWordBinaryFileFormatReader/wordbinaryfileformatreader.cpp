@@ -12,15 +12,26 @@ struct WordBinaryFileFormatReader::FIB_Begin
 };
 
 
+struct WordBinaryFileFormatReader::CLX_Data {
+    std::vector<uint32_t> characterSequences;
+    std::vector<Pcd> characterSequencesOffsets;
 
-WordBinaryFileFormatReader::WordBinaryFileFormatReader(const std::string& fileName)
-    : WindowsCompoundBinaryFileFormatReader(fileName)
+    int16_t prlArraySize;
+
+    uint32_t plcPcdSize;
+    uint32_t lastCpValue;
+};
+
+
+
+WordBinaryFileFormatReader::WordBinaryFileFormatReader(const std::string& fileName, uint16_t flags)
+    : WindowsCompoundBinaryFileFormatReader(fileName), _flags(flags)
 {
     readDocument();
 }
 
-WordBinaryFileFormatReader::WordBinaryFileFormatReader(std::istream& stream)
-    : WindowsCompoundBinaryFileFormatReader(stream)
+WordBinaryFileFormatReader::WordBinaryFileFormatReader(std::istream& stream, uint16_t flags)
+    : WindowsCompoundBinaryFileFormatReader(stream), _flags(flags)
 {
     readDocument();
 }
@@ -74,6 +85,11 @@ void WordBinaryFileFormatReader::readDocument()
         readDocument07(fibEnd);
     } break;
     }
+
+    clearData();
+    _wordDocumentStream.reset();
+    _tableStream.reset();
+    _fibBegin.reset();
 }
 
 
@@ -82,8 +98,13 @@ void WordBinaryFileFormatReader::readDocument97(FIB_RgFcLcb97& fibEnd)
     // Read date for document 1997
     std::cout << "Read version: 1997!" << std::endl;
 
+    readAFC(fibEnd);
+
     readClxArray(fibEnd);
     readCharacters();
+
+    makeContainers();
+
     readDateTime(fibEnd);
 
     std::cout << std::endl;
@@ -225,55 +246,58 @@ void WordBinaryFileFormatReader::readCharacters()
     for (uint32_t i = 0, size = _charactersPositions.size() - 1; i < size; i++)
     {
         uint32_t symbolsAmount = _charactersPositions[i + 1] - _charactersPositions[i];
-        std::wstring nextStr;
+        //std::wstring nextStr;
 
         if (_charactersOffsets[i].fc.a == 0)
         {
-            std::u16string str(symbolsAmount + 1, 0);
+            std::u16string str(symbolsAmount, 0);
             _wordDocumentStream->seekg(_charactersOffsets[i].fc.fc, _wordDocumentStream->beg);
             _wordDocumentStream->read((char*)str.data(), sizeof(char16_t) * symbolsAmount);
 
             std::wstring_convert<std::codecvt_utf16<wchar_t, 0x10ffff, std::little_endian>> conversion;
-            nextStr = conversion.from_bytes(
+            _characterStream << conversion.from_bytes(
                         reinterpret_cast<const char*> (&str[0]),
                         reinterpret_cast<const char*> (&str[0] + str.size()));
             int a = 0; a++;
         }
         else
         {
-            std::string str(symbolsAmount + 1, 0);
+            std::string str(symbolsAmount, 0);
             _wordDocumentStream->seekg(_charactersOffsets[i].fc.fc / 2, _wordDocumentStream->beg);
             _wordDocumentStream->read((char*)str.data(), symbolsAmount);
-            nextStr = std::wstring(str.begin(), str.end());
+            _characterStream << std::wstring(str.begin(), str.end());
         }
+        //_characterStream.
 
-        makeTextContainers(nextStr);
+        //makeTextContainers(nextStr);
     }
 
-
+    /*
     for(auto& container : _textContainers)
     {
         std::wcout << L"[ Text ]#> " << container.watchText() << std::endl;
     }
+    */
 }
 
 
 void WordBinaryFileFormatReader::makeTextContainers(std::wstring& charactersArray)
 {
-   // _textContainers.emplace_back(charactersArray);
+    //bool isEndOfCharactersBlock = false;
+    //bool isTable;
 
-    std::wstringstream wss;
+    //int last
     for (auto ch : charactersArray)
     {
         if (ch >= 32)
         {
-            wss << ch;
+            _characterStream << ch;
         }
-        else if (wss.tellp() > 0)
+        else if (_characterStream.tellp() > 0 && ch == 13 /*paragraph mark*/)
         {
             //TextContainer container();
-            _textContainers.emplace_back(wss.str());
-            wss.str(L"");
+            _textContainers.emplace_back(_characterStream.str());
+            _characterStream.str(L"");
         }
     }
 }
@@ -307,5 +331,106 @@ std::istream& WordBinaryFileFormatReader::getStream(std::string streamName)
     }
 
     return this->getStreamById(streamID);
+}
+
+
+
+
+
+////////// Experemental
+void WordBinaryFileFormatReader::readAFC(FIB_RgFcLcb97& fibEnd)
+{
+    _tableStream->seekg(fibEnd.fcPlcfBtePapx, _wordDocumentStream->beg);
+    uint32_t offset = 0;
+    while ( _tableStream->peekData<uint32_t>() > offset)
+    {
+        offset = _tableStream->getData<uint32_t>();
+        _plcBtePapx_afc.push_back(offset);
+    }
+
+    readPnFkpPapx();
+}
+
+void WordBinaryFileFormatReader::readPnFkpPapx()
+{
+    for (int i = 0, size = _plcBtePapx_afc.size() - 1; i < size; i++)
+    {
+        uint32_t offset = _tableStream->getData<uint32_t>();
+        offset <<= 10;
+        offset >>= 10;
+        _plcBtePapx_pnFkpPapx.push_back(offset * 512);
+    }
+
+    readPapxFkp();
+}
+
+void WordBinaryFileFormatReader::readPapxFkp()
+{
+    for (auto offset : _plcBtePapx_pnFkpPapx)
+    {
+        _wordDocumentStream->seekg(offset, _wordDocumentStream->beg);
+        auto rgfcAmount = _wordDocumentStream->peekData<uint8_t>(offset + 511) + 1;
+
+        for (int i = 1; i < rgfcAmount; i++)
+        {
+            _plcBtePapx_PapxFkp.push_back(_wordDocumentStream->getData<uint32_t>());
+        }
+    }
+    _plcBtePapx_PapxFkp.push_back(_wordDocumentStream->getData<uint32_t>());
+}
+
+
+void WordBinaryFileFormatReader::makeContainers()
+{
+    modifyDiapasonsForWorkWithCharacterStream();
+    readCharactersAndCreateContainers();
+}
+
+void WordBinaryFileFormatReader::modifyDiapasonsForWorkWithCharacterStream()
+{
+    uint32_t characterPartIndex = 0;
+    uint32_t subForCorrectingOffset = _charactersOffsets[characterPartIndex].fc.fc;
+
+    uint32_t minOffset = 0;
+    uint32_t maxOffset = minOffset
+            + ((_charactersPositions.size() > 1)
+                ? _charactersPositions[1] - _charactersPositions[0]
+                : _charactersPositions[0])
+            * 2;
+
+    for (auto& offset : _plcBtePapx_PapxFkp)
+    {
+        uint32_t newOffset = offset - subForCorrectingOffset;
+        if (newOffset > maxOffset)
+        {
+            characterPartIndex++;
+            if ( maxOffset != (_charactersOffsets[characterPartIndex].fc.fc - subForCorrectingOffset) )
+            {
+                subForCorrectingOffset += _charactersOffsets[characterPartIndex].fc.fc
+                        - subForCorrectingOffset - maxOffset;
+            }
+            minOffset = maxOffset;
+            maxOffset = minOffset
+                    + (_charactersPositions[characterPartIndex + 1]
+                    - _charactersPositions[characterPartIndex]) * 2;
+
+            newOffset = offset - subForCorrectingOffset;
+        }
+
+        offset = newOffset;
+    }
+}
+
+void WordBinaryFileFormatReader::readCharactersAndCreateContainers()
+{
+    _characterStream.seekg(0, _characterStream.beg);
+    std::wstring baseStr = _characterStream.str();
+    for (int i = 0, size = _plcBtePapx_PapxFkp.size() - 1; i < size; i++)
+    {
+        uint32_t stringSize = (_plcBtePapx_PapxFkp[i + 1] - _plcBtePapx_PapxFkp[i]) / 2;
+        std::wstring str(stringSize + 1, 0);
+
+        _characterStream.read((wchar_t*)str.data(), stringSize);
+    }
 }
 

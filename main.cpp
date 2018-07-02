@@ -13,7 +13,7 @@ int main()
     std::wcout.imbue(std::locale(""));
     //std::locale::global(std::locale("en_US.UTF-8"));
 
-    const std::string docName = "TestDoc_3.doc";
+    const std::string docName = "TestDoc.doc";
     WordBinaryFileFormatReader lol(docName);
 
     std::cout << "\nLast save: " << lol.getLastSaveTime_str() << std::endl;
