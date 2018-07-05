@@ -22,7 +22,15 @@ public:
     };
 
 private:
-    uint32_t _flags;
+    enum WBFF_Marks : uint16_t
+    {
+        Mark_Table = 0x7,
+        Mark_Image = 0x8,
+        Mark_Paragraph = 0x13
+    };
+
+    uint16_t _flags;
+    struct ReadFlags;
 
     struct FIB_Begin;
     struct CLX_Data;
@@ -62,10 +70,10 @@ private:
     std::vector<Pcd> _charactersOffsets;
 
     /// Containers
-    //std::vector<std::shared_ptr<Container>> _allContainers;
-    std::vector<TextContainer> _textContainers;
-    std::vector<TableContainer> _tableContainers;
-    std::vector<ImageContainer> _imageContainers;
+    std::vector<std::shared_ptr<Container>> _allContainers;
+    //std::vector<TextContainer> _textContainers;
+    //std::vector<TableContainer> _tableContainers;
+    //std::vector<ImageContainer> _imageContainers;
     //std::shared_ptr<Container> lastContainer;
     /// End
 
@@ -129,8 +137,6 @@ private:
     void readCharacters();
     void readCharacters(CLX_Data& clxData);
     /// Make containers! End
-
-    void makeTextContainers(std::wstring& charactersArray);
 
     /// Work with document date and time! Begin
     void readDateTime(FIB_RgFcLcb97& fibEnd);

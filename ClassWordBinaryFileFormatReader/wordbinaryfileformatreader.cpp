@@ -246,7 +246,6 @@ void WordBinaryFileFormatReader::readCharacters()
     for (uint32_t i = 0, size = _charactersPositions.size() - 1; i < size; i++)
     {
         uint32_t symbolsAmount = _charactersPositions[i + 1] - _charactersPositions[i];
-        //std::wstring nextStr;
 
         if (_charactersOffsets[i].fc.a == 0)
         {
@@ -266,38 +265,6 @@ void WordBinaryFileFormatReader::readCharacters()
             _wordDocumentStream->seekg(_charactersOffsets[i].fc.fc / 2, _wordDocumentStream->beg);
             _wordDocumentStream->read((char*)str.data(), symbolsAmount);
             _characterStream << std::wstring(str.begin(), str.end());
-        }
-        //_characterStream.
-
-        //makeTextContainers(nextStr);
-    }
-
-    /*
-    for(auto& container : _textContainers)
-    {
-        std::wcout << L"[ Text ]#> " << container.watchText() << std::endl;
-    }
-    */
-}
-
-
-void WordBinaryFileFormatReader::makeTextContainers(std::wstring& charactersArray)
-{
-    //bool isEndOfCharactersBlock = false;
-    //bool isTable;
-
-    //int last
-    for (auto ch : charactersArray)
-    {
-        if (ch >= 32)
-        {
-            _characterStream << ch;
-        }
-        else if (_characterStream.tellp() > 0 && ch == 13 /*paragraph mark*/)
-        {
-            //TextContainer container();
-            _textContainers.emplace_back(_characterStream.str());
-            _characterStream.str(L"");
         }
     }
 }
@@ -423,14 +390,33 @@ void WordBinaryFileFormatReader::modifyDiapasonsForWorkWithCharacterStream()
 
 void WordBinaryFileFormatReader::readCharactersAndCreateContainers()
 {
+    std::stack<std::shared_ptr<Container>> stackOfParentContainers;
+    std::shared_ptr<Container> newElement;
+
     _characterStream.seekg(0, _characterStream.beg);
     std::wstring baseStr = _characterStream.str();
     for (int i = 0, size = _plcBtePapx_PapxFkp.size() - 1; i < size; i++)
     {
-        uint32_t stringSize = (_plcBtePapx_PapxFkp[i + 1] - _plcBtePapx_PapxFkp[i]) / 2;
+        uint32_t stringSize = ((_plcBtePapx_PapxFkp[i + 1] - _plcBtePapx_PapxFkp[i]) / 2) - 1;
         std::wstring str(stringSize + 1, 0);
 
         _characterStream.read((wchar_t*)str.data(), stringSize);
+        uint32_t bytesReaded = _characterStream.gcount();
+
+        wchar_t lastSymbol;
+        _characterStream.read((wchar_t*)&lastSymbol, sizeof(wchar_t));
+
+        if (bytesReaded > 0)
+        {
+            newElement = std::make_shared<TextContainer>(str);
+        }
+
+        switch(lastSymbol)
+        {
+        case Mark_Paragraph: {} break;
+        case Mark_Table: {} break;
+        case Mark_Image: {} break;
+        }
     }
 }
 

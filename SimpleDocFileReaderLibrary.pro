@@ -16,7 +16,8 @@ HEADERS += \
     Containers/ClassContainer/container.h \
     Containers/ClassImageContainer/imagecontainer.h \
     Containers/ClassTableContainer/tablecontainer.h \
-    Containers/ClassTableCellContainer/tablecellcontainer.h
+    Containers/ClassTableCellContainer/tablecellcontainer.h \
+    Containers/ClassTableLineContainer/tablelinecontainer.h
 
 SOURCES += \
     ClassInputBinaryStream/inputbinarystream.cpp \
@@ -27,4 +28,5 @@ SOURCES += \
     Containers/ClassContainer/container.cpp \
     Containers/ClassImageContainer/imagecontainer.cpp \
     Containers/ClassTableContainer/tablecontainer.cpp \
-    Containers/ClassTableCellContainer/tablecellcontainer.cpp
+    Containers/ClassTableCellContainer/tablecellcontainer.cpp \
+    Containers/ClassTableLineContainer/tablelinecontainer.cpp

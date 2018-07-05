@@ -25,6 +25,9 @@ public:
     Container();
     virtual ~Container() = 0;
 
+    inline void addChild(std::shared_ptr<Container>& container) { _childContainers.push_back(container); }
+    inline const std::list<std::shared_ptr<Container>>& getChilds() { return _childContainers; }
+
     inline ContainerType getType() { return _type; }
 };
 
