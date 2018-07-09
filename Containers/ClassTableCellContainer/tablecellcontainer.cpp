@@ -2,5 +2,5 @@
 
 TableCellContainer::TableCellContainer()
 {
-
+    _type = ContainerType_TableCell;
 }

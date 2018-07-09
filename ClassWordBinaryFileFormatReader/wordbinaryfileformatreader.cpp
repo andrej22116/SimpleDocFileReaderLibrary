@@ -98,7 +98,7 @@ void WordBinaryFileFormatReader::readDocument97(FIB_RgFcLcb97& fibEnd)
     // Read date for document 1997
     std::cout << "Read version: 1997!" << std::endl;
 
-    readAFC(fibEnd);
+    readCpDiapasons(fibEnd);
 
     readClxArray(fibEnd);
     readCharacters();
@@ -301,50 +301,135 @@ std::istream& WordBinaryFileFormatReader::getStream(std::string streamName)
 }
 
 
+///////////////////////////////////////////
+/// Reading characters diapasons! Begin ///
+///////////////////////////////////////////
+
+void WordBinaryFileFormatReader::readCpDiapasons(FIB_RgFcLcb97& fibEnd)
+{
+    readOffsetsOfDataDiapasons(fibEnd);
+    readOffsetsOfSequenceStructuresWithCharactersDiapasons();
+    readCharacterDiapasons();
+}
 
 
-
-////////// Experemental
-void WordBinaryFileFormatReader::readAFC(FIB_RgFcLcb97& fibEnd)
+void WordBinaryFileFormatReader::readOffsetsOfDataDiapasons(FIB_RgFcLcb97& fibEnd)
 {
     _tableStream->seekg(fibEnd.fcPlcfBtePapx, _wordDocumentStream->beg);
     uint32_t offset = 0;
     while ( _tableStream->peekData<uint32_t>() > offset)
     {
         offset = _tableStream->getData<uint32_t>();
-        _plcBtePapx_afc.push_back(offset);
+        _offsetsOfDataDiapasons.push_back(offset);
     }
-
-    readPnFkpPapx();
 }
 
-void WordBinaryFileFormatReader::readPnFkpPapx()
+
+void WordBinaryFileFormatReader::readOffsetsOfSequenceStructuresWithCharactersDiapasons()
 {
-    for (int i = 0, size = _plcBtePapx_afc.size() - 1; i < size; i++)
+    for (int i = 0, size = _offsetsOfDataDiapasons.size() - 1; i < size; i++)
     {
         uint32_t offset = _tableStream->getData<uint32_t>();
         offset <<= 10;
         offset >>= 10;
-        _plcBtePapx_pnFkpPapx.push_back(offset * 512);
+        _offsetsOfSequenceStructuresWithCharactersDiapasons.push_back(offset * 512);
     }
-
-    readPapxFkp();
 }
 
-void WordBinaryFileFormatReader::readPapxFkp()
+
+void WordBinaryFileFormatReader::readCharacterDiapasons()
 {
-    for (auto offset : _plcBtePapx_pnFkpPapx)
+    for (auto offset : _offsetsOfSequenceStructuresWithCharactersDiapasons)
     {
         _wordDocumentStream->seekg(offset, _wordDocumentStream->beg);
-        auto rgfcAmount = _wordDocumentStream->peekData<uint8_t>(offset + 511) + 1;
+        auto rgfcAmount = _wordDocumentStream->peekData<uint8_t>(offset + 511);
 
-        for (int i = 1; i < rgfcAmount; i++)
+        if (_characterDiapasons.empty())
         {
-            _plcBtePapx_PapxFkp.push_back(_wordDocumentStream->getData<uint32_t>());
+            _characterDiapasons.push_back(_wordDocumentStream->getData<uint32_t>());
+        }
+        else
+        {
+            _wordDocumentStream->ignore(sizeof(uint32_t));
+        }
+        for (int i = 0; i < rgfcAmount; i++)
+        {
+            _characterDiapasons.push_back(_wordDocumentStream->getData<uint32_t>());
+        }
+
+        for (int i = 0; i < rgfcAmount; i++)
+        {
+            _characterDiapasonsPropertiesOffsets.push_back(_wordDocumentStream->getData<uint8_t>());
+            _wordDocumentStream->ignore(sizeof(uint32_t) * 3);
+        }
+
+        for (uint16_t structOffset : _characterDiapasonsPropertiesOffsets)
+        {
+            if (structOffset == 0) continue;
+
+            structOffset *= 2;
+            _wordDocumentStream->seekg(offset + structOffset, _wordDocumentStream->beg);
+
+            uint16_t structSize = _wordDocumentStream->getData<uint8_t>();
+            if (structSize == 0)
+            {
+                structSize = _wordDocumentStream->getData<uint8_t>() * 2;
+            }
+            else
+            {
+                structSize = (structSize * 2) - 1;
+            }
+
+            _characterDiapasonsStyles.push_back(_wordDocumentStream->getData<uint16_t>());
+            for (int bytesReaded = sizeof(uint16_t); bytesReaded < structSize;)
+            {
+                Sprm sprm(_wordDocumentStream->getData<uint16_t>());
+                _characterDiapasonsModify.push_back(sprm);
+                bytesReaded += sizeof(uint16_t);
+
+                switch (sprm.spra)
+                {
+                case 0: case 1: {
+                    _characterDiapasonsModifyOperands.push_back(_wordDocumentStream->getData<uint8_t>());
+                    bytesReaded += sizeof(uint8_t);
+                } break;
+                case 2: case 4: case 5: {
+                    _characterDiapasonsModifyOperands.push_back(_wordDocumentStream->getData<uint16_t>());
+                    bytesReaded += sizeof(uint16_t);
+                } break;
+                case 3: {
+                    _characterDiapasonsModifyOperands.push_back(_wordDocumentStream->getData<uint32_t>());
+                    bytesReaded += sizeof(uint32_t);
+                } break;
+                case 7: {
+                    uint32_t operand = 0;
+                    _wordDocumentStream->read((char*)&operand, 3);
+                    _characterDiapasonsModifyOperands.push_back(operand);
+                    bytesReaded += 3;
+                } break;
+                case 6: {
+                    auto operandSize = _wordDocumentStream->getData<uint8_t>();
+                    if (operandSize > sizeof(uint32_t))
+                    {
+                        std::cout << "Operand with type 6 has size > 4! Size: " << uint32_t(operandSize) << std::endl;
+                        _characterDiapasonsModifyOperands.push_back(_wordDocumentStream->getData<uint32_t>());
+                        _wordDocumentStream->ignore(operandSize - sizeof(uint32_t));
+                    }
+                    else
+                    {
+                        uint32_t operand = 0;
+                        _wordDocumentStream->read((char*)&operand, operandSize);
+                        _characterDiapasonsModifyOperands.push_back(operand);
+                    }
+                    bytesReaded += operandSize;
+                } break;
+                }
+            }
         }
     }
-    _plcBtePapx_PapxFkp.push_back(_wordDocumentStream->getData<uint32_t>());
 }
+
+
 
 
 void WordBinaryFileFormatReader::makeContainers()
@@ -365,7 +450,7 @@ void WordBinaryFileFormatReader::modifyDiapasonsForWorkWithCharacterStream()
                 : _charactersPositions[0])
             * 2;
 
-    for (auto& offset : _plcBtePapx_PapxFkp)
+    for (auto& offset : _characterDiapasons)
     {
         uint32_t newOffset = offset - subForCorrectingOffset;
         if (newOffset > maxOffset)
@@ -393,28 +478,39 @@ void WordBinaryFileFormatReader::readCharactersAndCreateContainers()
     std::stack<std::shared_ptr<Container>> stackOfParentContainers;
     std::shared_ptr<Container> newElement;
 
+    int counter_paragraph = 0;
+    int counter_table = 0;
+
     _characterStream.seekg(0, _characterStream.beg);
-    std::wstring baseStr = _characterStream.str();
-    for (int i = 0, size = _plcBtePapx_PapxFkp.size() - 1; i < size; i++)
+    std::wstring str;
+    for (int i = 0, size = _characterDiapasons.size() - 1; i < size; i++)
     {
-        uint32_t stringSize = ((_plcBtePapx_PapxFkp[i + 1] - _plcBtePapx_PapxFkp[i]) / 2) - 1;
-        std::wstring str(stringSize + 1, 0);
+        uint32_t stringSize = ((_characterDiapasons[i + 1] - _characterDiapasons[i]) / 2) - 1;
+        str.resize(stringSize, 0);
 
         _characterStream.read((wchar_t*)str.data(), stringSize);
         uint32_t bytesReaded = _characterStream.gcount();
 
         wchar_t lastSymbol;
-        _characterStream.read((wchar_t*)&lastSymbol, sizeof(wchar_t));
+        _characterStream.read((wchar_t*)&lastSymbol, 1);
 
         if (bytesReaded > 0)
         {
             newElement = std::make_shared<TextContainer>(str);
         }
 
+        std::wcout << L"Str: " << str << " | last symbol: " << (uint16_t)lastSymbol << std::endl;
+
         switch(lastSymbol)
         {
-        case Mark_Paragraph: {} break;
-        case Mark_Table: {} break;
+        case Mark_Paragraph: {
+            counter_table = 0;
+            counter_paragraph++;
+        } break;
+        case Mark_Table: {
+            counter_paragraph = 0;
+            counter_table++;
+        } break;
         case Mark_Image: {} break;
         }
     }

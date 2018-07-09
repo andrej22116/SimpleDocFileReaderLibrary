@@ -7,6 +7,7 @@ TextContainer::TextContainer(const std::wstring& text)
 */
 TextContainer::TextContainer(std::wstring text)
 {
+    _type = ContainerType_Text;
     _text = text;
 }
 

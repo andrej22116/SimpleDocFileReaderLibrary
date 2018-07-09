@@ -683,9 +683,15 @@ struct FIB_RgCswNewData2007 : public FIB_RgCswNewData2000
 struct Sprm
 {
     unsigned ispmd : 9;
-    unsigned A : 1;
+    unsigned f : 1;
     unsigned sgc : 3;
     unsigned spra : 3;
+
+    Sprm(uint16_t sprm) :
+        ispmd( sprm & 0x01FF ),
+        f ( (sprm >> 9) & 0x0001 ),
+        sgc ( (sprm >> 10) & 0x0007 ),
+        spra ( sprm >> 13 ) {}
 };
 
 struct FcCompressed

@@ -12,14 +12,17 @@ public:
         ContainerType_NoType = 0,
         ContainerType_Text,
         ContainerType_Table,
+        ContainerType_TableLine,
         ContainerType_TableCell,
         ContainerType_Image,
         ContainerType_TypesAmount
     };
 
 private:
-    ContainerType _type;
     std::list<std::shared_ptr<Container>> _childContainers;
+
+protected:
+    ContainerType _type;
 
 public:
     Container();

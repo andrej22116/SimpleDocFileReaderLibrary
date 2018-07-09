@@ -2,5 +2,5 @@
 
 TableLineContainer::TableLineContainer()
 {
-
+    _type = ContainerType_TableLine;
 }

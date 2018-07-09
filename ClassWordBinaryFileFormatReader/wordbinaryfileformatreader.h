@@ -26,7 +26,7 @@ private:
     {
         Mark_Table = 0x7,
         Mark_Image = 0x8,
-        Mark_Paragraph = 0x13
+        Mark_Paragraph = 0xD
     };
 
     uint16_t _flags;
@@ -40,42 +40,26 @@ private:
     std::shared_ptr<InputBinaryStream> _wordDocumentStream;
     std::shared_ptr<InputBinaryStream> _tableStream;
 
-    /// For parse characters blocks;
-    //std::wstringstream characterStream;
+    /// For parse characters blocks
     std::wstringstream _characterStream;
-    //int32_t _lastParagraphSymbolPos = -1;
-    //int32_t _lastTableSymbolPos = -1;
-    //bool _hasParagraphSymbol = false;
-    //bool _hasTableSymbol = false;
     /// End. :)
 
-    /// Experement with PlcBtePapx begin
-    /// Result
+    /// CpDiapasons Begin
     std::vector<uint32_t> _offsetsOfDataDiapasons;
     std::vector<uint32_t> _offsetsOfSequenceStructuresWithCharactersDiapasons;
+    std::vector<uint8_t>  _characterDiapasonsPropertiesOffsets;
+    std::vector<uint16_t> _characterDiapasonsStyles;
+    std::vector<Sprm>     _characterDiapasonsModify;
+    std::vector<uint32_t> _characterDiapasonsModifyOperands;
     std::vector<uint32_t> _characterDiapasons;
-    //std::vector<std::vector<uint32_t>> _characterDiapasons;
-    //std::map<uint32_t, std::vector<uint32_t>> _cpDiapasons;
-    /// Experement
-    std::vector<uint32_t> _plcBtePapx_afc;
-    std::vector<uint32_t> _plcBtePapx_pnFkpPapx;
-    //std::vector<std::vector<uint32_t>> _plcBtePapx_PapxFkp;
-    std::vector<uint32_t> _plcBtePapx_PapxFkp;
-    void readAFC(FIB_RgFcLcb97& fibEnd);
-    void readPnFkpPapx();
-    void readPapxFkp();
-    /// End
+    /// CpDiapasons End
 
     std::vector<uint32_t> _charactersPositions;
     std::vector<Pcd> _charactersOffsets;
 
-    /// Containers
-    std::vector<std::shared_ptr<Container>> _allContainers;
-    //std::vector<TextContainer> _textContainers;
-    //std::vector<TableContainer> _tableContainers;
-    //std::vector<ImageContainer> _imageContainers;
-    //std::shared_ptr<Container> lastContainer;
-    /// End
+    /// Containers Begin
+    std::list<std::shared_ptr<Container>> _allContainers;
+    /// Containers End
 
 
     time_t _timeLastSave;
@@ -102,25 +86,29 @@ private:
     void readClxArray(FIB_RgFcLcb97& fibEnd);
 
     /// Reading data for find characters! Begin
+    void readText(FIB_RgFcLcb97& fibEnd);   // Need doing this!
     // Удалить это! Начало
     void readPrcArray(FIB_RgFcLcb97& fibEnd);
     void readPrcDataArray();
     void readPrlArray(int16_t prlArraySize);
+    // Удалить это! Конец
 
     void readPrcArray(FIB_RgFcLcb97& fibEnd, CLX_Data& clxData);
     void readPrcDataArray(CLX_Data& clxData);
     void readPrlArray(CLX_Data& clxData);
-    // Удалить это! Конец
 
+    // Удалить это! Начало
     void readPcdtArray();
     void readPlcPcdArray(uint32_t plcPcdSize);
     void readCpArray(uint32_t lastCpValue);
     void readPlcArray();
+    // Удалить это! Конец
 
     void readPcdtArray(CLX_Data& clxData);
     void readPlcPcdArray(CLX_Data& clxData);
     void readCpArray(CLX_Data& clxData);
     void readPlcArray(CLX_Data& clxData);
+
     /// Reading data for find characters! End
 
     /// Reading characters diapasons! Begin
