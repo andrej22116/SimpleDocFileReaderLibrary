@@ -1,7 +1,7 @@
 #ifndef IMAGECONTAINER_H
 #define IMAGECONTAINER_H
 
-#include "Containers/ClassContainer/container.h"
+#include <SDRL/Containers/container.h>
 
 class ImageContainer : public Container
 {

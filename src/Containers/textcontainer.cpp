@@ -1,4 +1,4 @@
-#include "textcontainer.h"
+#include <SDRL/Containers/textcontainer.h>//"textcontainer.h"
 /*
 TextContainer::TextContainer(const std::wstring& text)
 {

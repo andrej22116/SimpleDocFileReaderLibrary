@@ -1,9 +1,9 @@
 #pragma once
 
-#ifndef WINDOWSCOMPOUNDBINARYFILEFORMATREADER_H
-#define WINDOWSCOMPOUNDBINARYFILEFORMATREADER_H
+#ifndef CP_BFFR_H
+#define CP_BFFR_H
 
-#include "stdincludes.h"
+#include <SDRL/stdincludes.h>
 
 class WindowsCompoundBinaryFileFormatReader
 {
@@ -39,4 +39,4 @@ private:
                           uint32_t firstSector, uint32_t streamSize, bool isMiniFat);
 };
 
-#endif // WINDOWSCOMPOUNDBINARYFILEFORMATREADER_H
+#endif // CP_BFFR_H

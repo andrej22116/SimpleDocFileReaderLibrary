@@ -1,8 +1,8 @@
-#include "windowscompoundbinaryfileformatreader.h"
+#include <SDRL/compoundBFFR.h>//"windowscompoundbinaryfileformatreader.h"
 
-#include "variablevisualize.hpp"
-#include "wcbff_structures.h"
-#include "ClassInputBinaryStream/inputbinarystream.h"
+#include <SDRL/variablevisualize.hpp>//"variablevisualize.hpp"
+#include <SDRL/Compound_wcbff_structures.h>//"wcbff_structures.h"
+#include <SDRL/inputbinarystream.h>//"ClassInputBinaryStream/inputbinarystream.h"
 
 
 struct WindowsCompoundBinaryFileFormatReader::_WCBFF_Structure {

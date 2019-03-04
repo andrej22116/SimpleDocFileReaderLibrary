@@ -1,17 +1,17 @@
-#ifndef WORDBINARYFILEFORMATREADER_H
-#define WORDBINARYFILEFORMATREADER_H
+#ifndef W_BFFR_H
+#define W_BFFR_H
 
-#include "ClassWindowsCompoundBinaryFileFormatReader/windowscompoundbinaryfileformatreader.h"
-#include "wbff_structures.h"
-#include "ClassInputBinaryStream/inputbinarystream.h"
+#include <SDRL/compoundBFFR.h>//"ClassWindowsCompoundBinaryFileFormatReader/windowscompoundbinaryfileformatreader.h"
+#include <SDRL/Word_wbff_structures.h>//"wbff_structures.h"
+#include <SDRL/inputbinarystream.h>//"ClassInputBinaryStream/inputbinarystream.h"
 
-#include "Containers/ClassTextContainer/textcontainer.h"
-#include "Containers/ClassTableContainer/tablecontainer.h"
-#include "Containers/ClassImageContainer/imagecontainer.h"
+#include <SDRL/Containers/textcontainer.h>//"Containers/ClassTextContainer/textcontainer.h"
+#include <SDRL/Containers/tablecontainer.h>//"Containers/ClassTableContainer/tablecontainer.h"
+#include <SDRL/Containers/imagecontainer.h>//"Containers/ClassImageContainer/imagecontainer.h"
 
 #include <stack>
 
-class WordBinaryFileFormatReader : protected WindowsCompoundBinaryFileFormatReader
+class SDRL : protected WindowsCompoundBinaryFileFormatReader
 {
 public:
     enum WBFF_Objects
@@ -66,8 +66,8 @@ private:
     std::string _timeLastSave_str;
     //time_t _timeOfModify;
 public:
-    WordBinaryFileFormatReader(const std::string& fileName, uint16_t flags = WBFF_Texts);
-    WordBinaryFileFormatReader(std::istream& stream, uint16_t flags = WBFF_Texts);
+    SDRL(const std::string& fileName, uint16_t flags = WBFF_Texts);
+    SDRL(std::istream& stream, uint16_t flags = WBFF_Texts);
 
     inline time_t getLastSaveTime() { return _timeLastSave; }
     inline std::string getLastSaveTime_str() { return _timeLastSave_str; }
@@ -134,4 +134,4 @@ private:
     std::istream& getStream(std::string streamName);
 };
 
-#endif // WORDBINARYFILEFORMATREADER_H
+#endif // SDRL_H
