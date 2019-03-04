@@ -3,7 +3,7 @@
 #include <fstream>
 #include <ctime>
 
-#include "ClassWordBinaryFileFormatReader/wordbinaryfileformatreader.h"
+#include <SDRL.h>
 
 using namespace std;
 
