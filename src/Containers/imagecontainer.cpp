@@ -1,4 +1,4 @@
-#include "imagecontainer.h"
+#include <SDRL/Containers/imagecontainer.h>//"imagecontainer.h"
 
 ImageContainer::ImageContainer()
 {

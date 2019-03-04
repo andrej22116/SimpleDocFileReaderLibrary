@@ -4,4 +4,4 @@ mkdir Build
 
 cd Build
 
-cmake ..
+cmake -DBUILD_EXAMPLE=ON ..

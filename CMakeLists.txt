@@ -8,6 +8,7 @@ option(BUILD_EXAMPLE "BUILD_EXAMPLE" OFF)
 
 file(GLOB SDRLsrc #Select all files in src/
     "src/*.cpp"
+    "src/Containers/*.cpp"
 )
 
 add_library(SDRL ${SDRLsrc}) # Create library
