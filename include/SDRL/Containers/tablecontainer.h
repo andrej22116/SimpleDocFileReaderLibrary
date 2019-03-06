@@ -1,7 +1,7 @@
 #ifndef TABLECONTAINER_H
 #define TABLECONTAINER_H
 
-#include "Containers/ClassContainer/container.h"
+#include <SDRL/Containers/container.h>
 
 class TableContainer : public Container
 {

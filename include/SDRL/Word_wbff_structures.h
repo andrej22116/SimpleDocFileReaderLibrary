@@ -1,5 +1,5 @@
-#ifndef WBFF_STRUCTURES_H
-#define WBFF_STRUCTURES_H
+#ifndef W_WBFF_STRUCTURES_H
+#define W_WBFF_STRUCTURES_H
 
 #include <cinttypes>
 

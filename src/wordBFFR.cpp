@@ -1,10 +1,10 @@
-#include "wordbinaryfileformatreader.h"
-#include "variablevisualize.hpp"
+#include <SDRL/wordBFFR.h>//"SDRL.h"
+#include <SDRL/variablevisualize.hpp>//"variablevisualize.hpp"
 //#include "ClassInputBinaryStream/inputbinarystream.h"
 
 //#include "wbff_structures.h"
 
-struct WordBinaryFileFormatReader::FIB_Begin
+struct SDRL::FIB_Begin
 {
     FIB_Base fibBase;
     FIB_RgW97 fibRgW97;
@@ -12,7 +12,7 @@ struct WordBinaryFileFormatReader::FIB_Begin
 };
 
 
-struct WordBinaryFileFormatReader::CLX_Data {
+struct SDRL::CLX_Data {
     std::vector<uint32_t> characterSequences;
     std::vector<Pcd> characterSequencesOffsets;
 
@@ -24,20 +24,20 @@ struct WordBinaryFileFormatReader::CLX_Data {
 
 
 
-WordBinaryFileFormatReader::WordBinaryFileFormatReader(const std::string& fileName, uint16_t flags)
+SDRL::SDRL(const std::string& fileName, uint16_t flags)
     : WindowsCompoundBinaryFileFormatReader(fileName), _flags(flags)
 {
     readDocument();
 }
 
-WordBinaryFileFormatReader::WordBinaryFileFormatReader(std::istream& stream, uint16_t flags)
+SDRL::SDRL(std::istream& stream, uint16_t flags)
     : WindowsCompoundBinaryFileFormatReader(stream), _flags(flags)
 {
     readDocument();
 }
 
 
-void WordBinaryFileFormatReader::readDocument()
+void SDRL::readDocument()
 {
     _wordDocumentStream = std::make_shared<InputBinaryStream>(getStream("WordDocument"));
 
@@ -93,7 +93,7 @@ void WordBinaryFileFormatReader::readDocument()
 }
 
 
-void WordBinaryFileFormatReader::readDocument97(FIB_RgFcLcb97& fibEnd)
+void SDRL::readDocument97(FIB_RgFcLcb97& fibEnd)
 {
     // Read date for document 1997
     std::cout << "Read version: 1997!" << std::endl;
@@ -111,7 +111,7 @@ void WordBinaryFileFormatReader::readDocument97(FIB_RgFcLcb97& fibEnd)
 }
 
 
-void WordBinaryFileFormatReader::readDocument00(FIB_RgFcLcb2000& fibEnd)
+void SDRL::readDocument00(FIB_RgFcLcb2000& fibEnd)
 {
     // Read date for document 2000
     readDocument97(fibEnd);
@@ -119,7 +119,7 @@ void WordBinaryFileFormatReader::readDocument00(FIB_RgFcLcb2000& fibEnd)
 }
 
 
-void WordBinaryFileFormatReader::readDocument02(FIB_RgFcLcb2002& fibEnd)
+void SDRL::readDocument02(FIB_RgFcLcb2002& fibEnd)
 {
     // Read date for document 2002
     readDocument00(fibEnd);
@@ -127,7 +127,7 @@ void WordBinaryFileFormatReader::readDocument02(FIB_RgFcLcb2002& fibEnd)
 }
 
 
-void WordBinaryFileFormatReader::readDocument03(FIB_RgFcLcb2003& fibEnd)
+void SDRL::readDocument03(FIB_RgFcLcb2003& fibEnd)
 {
     // Read date for document 2003
     readDocument02(fibEnd);
@@ -135,7 +135,7 @@ void WordBinaryFileFormatReader::readDocument03(FIB_RgFcLcb2003& fibEnd)
 }
 
 
-void WordBinaryFileFormatReader::readDocument07(FIB_RgFcLcb2007& fibEnd)
+void SDRL::readDocument07(FIB_RgFcLcb2007& fibEnd)
 {
     // Read date for document 2007. No data. :3
     readDocument03(fibEnd);
@@ -144,14 +144,14 @@ void WordBinaryFileFormatReader::readDocument07(FIB_RgFcLcb2007& fibEnd)
 
 
 
-void WordBinaryFileFormatReader::readClxArray(FIB_RgFcLcb97& fibEnd)
+void SDRL::readClxArray(FIB_RgFcLcb97& fibEnd)
 {
     readPrcArray(fibEnd);
     readPcdtArray();
 }
 
 
-void WordBinaryFileFormatReader::readPrcArray(FIB_RgFcLcb97& fibEnd)
+void SDRL::readPrcArray(FIB_RgFcLcb97& fibEnd)
 {
     _tableStream->seekg(fibEnd.fcClx, _tableStream->beg);
 
@@ -163,14 +163,14 @@ void WordBinaryFileFormatReader::readPrcArray(FIB_RgFcLcb97& fibEnd)
 }
 
 
-void WordBinaryFileFormatReader::readPrcDataArray()
+void SDRL::readPrcDataArray()
 {
     auto cbGrpprl = _tableStream->getData<int16_t>();
     readPrlArray(cbGrpprl);
 }
 
 
-void WordBinaryFileFormatReader::readPrlArray(int16_t prlArraySize)
+void SDRL::readPrlArray(int16_t prlArraySize)
 {
     static const uint16_t bufferSize = 1024;
     static char buffer[bufferSize];
@@ -189,7 +189,7 @@ void WordBinaryFileFormatReader::readPrlArray(int16_t prlArraySize)
 
 
 
-void WordBinaryFileFormatReader::readPcdtArray()
+void SDRL::readPcdtArray()
 {
     while(_tableStream->peekData<uint8_t>() == 0x02)
     {
@@ -199,7 +199,7 @@ void WordBinaryFileFormatReader::readPcdtArray()
 }
 
 
-void WordBinaryFileFormatReader::readPlcPcdArray(uint32_t plcPcdSize)
+void SDRL::readPlcPcdArray(uint32_t plcPcdSize)
 {
     _charactersPositions.reserve(plcPcdSize / sizeof(uint32_t));
 
@@ -216,7 +216,7 @@ void WordBinaryFileFormatReader::readPlcPcdArray(uint32_t plcPcdSize)
 }
 
 
-void WordBinaryFileFormatReader::readCpArray(uint32_t lastCpValue)
+void SDRL::readCpArray(uint32_t lastCpValue)
 {
     uint32_t cpOffset = 0;
     do
@@ -228,7 +228,7 @@ void WordBinaryFileFormatReader::readCpArray(uint32_t lastCpValue)
 }
 
 
-void WordBinaryFileFormatReader::readPlcArray()
+void SDRL::readPlcArray()
 {
     for (uint32_t i = 1; i < _charactersPositions.size(); i++)
     {
@@ -241,7 +241,7 @@ void WordBinaryFileFormatReader::readPlcArray()
 }
 
 
-void WordBinaryFileFormatReader::readCharacters()
+void SDRL::readCharacters()
 {
     for (uint32_t i = 0, size = _charactersPositions.size() - 1; i < size; i++)
     {
@@ -270,7 +270,7 @@ void WordBinaryFileFormatReader::readCharacters()
 }
 
 
-void WordBinaryFileFormatReader::readDateTime(FIB_RgFcLcb97& fibEnd)
+void SDRL::readDateTime(FIB_RgFcLcb97& fibEnd)
 {
     _timeLastSave = getTime(fibEnd.dwLowDateTime, fibEnd.dwHighDateTime);
     std::tm* tm = std::localtime(&_timeLastSave);
@@ -280,7 +280,7 @@ void WordBinaryFileFormatReader::readDateTime(FIB_RgFcLcb97& fibEnd)
 }
 
 
-time_t WordBinaryFileFormatReader::getTime(uint32_t dwLowDateTime, uint32_t dwHighDateTime)
+time_t SDRL::getTime(uint32_t dwLowDateTime, uint32_t dwHighDateTime)
 {
     static const uint64_t EPOCH_DIFFERENCE_MICROS = 11644473600LL;
     uint64_t total_us = ((uint64_t)dwHighDateTime << 32) + dwLowDateTime;
@@ -289,7 +289,7 @@ time_t WordBinaryFileFormatReader::getTime(uint32_t dwLowDateTime, uint32_t dwHi
     return (time_t)(total_us / 10000000 - EPOCH_DIFFERENCE_MICROS);
 }
 
-std::istream& WordBinaryFileFormatReader::getStream(std::string streamName)
+std::istream& SDRL::getStream(std::string streamName)
 {
     auto streamID = this->getStreamIdByName(streamName);
     if (streamID < 0)
@@ -305,7 +305,7 @@ std::istream& WordBinaryFileFormatReader::getStream(std::string streamName)
 /// Reading characters diapasons! Begin ///
 ///////////////////////////////////////////
 
-void WordBinaryFileFormatReader::readCpDiapasons(FIB_RgFcLcb97& fibEnd)
+void SDRL::readCpDiapasons(FIB_RgFcLcb97& fibEnd)
 {
     readOffsetsOfDataDiapasons(fibEnd);
     readOffsetsOfSequenceStructuresWithCharactersDiapasons();
@@ -313,7 +313,7 @@ void WordBinaryFileFormatReader::readCpDiapasons(FIB_RgFcLcb97& fibEnd)
 }
 
 
-void WordBinaryFileFormatReader::readOffsetsOfDataDiapasons(FIB_RgFcLcb97& fibEnd)
+void SDRL::readOffsetsOfDataDiapasons(FIB_RgFcLcb97& fibEnd)
 {
     _tableStream->seekg(fibEnd.fcPlcfBtePapx, _wordDocumentStream->beg);
     uint32_t offset = 0;
@@ -325,7 +325,7 @@ void WordBinaryFileFormatReader::readOffsetsOfDataDiapasons(FIB_RgFcLcb97& fibEn
 }
 
 
-void WordBinaryFileFormatReader::readOffsetsOfSequenceStructuresWithCharactersDiapasons()
+void SDRL::readOffsetsOfSequenceStructuresWithCharactersDiapasons()
 {
     for (int i = 0, size = _offsetsOfDataDiapasons.size() - 1; i < size; i++)
     {
@@ -337,7 +337,7 @@ void WordBinaryFileFormatReader::readOffsetsOfSequenceStructuresWithCharactersDi
 }
 
 
-void WordBinaryFileFormatReader::readCharacterDiapasons()
+void SDRL::readCharacterDiapasons()
 {
     for (auto offset : _offsetsOfSequenceStructuresWithCharactersDiapasons)
     {
@@ -432,13 +432,13 @@ void WordBinaryFileFormatReader::readCharacterDiapasons()
 
 
 
-void WordBinaryFileFormatReader::makeContainers()
+void SDRL::makeContainers()
 {
     modifyDiapasonsForWorkWithCharacterStream();
     readCharactersAndCreateContainers();
 }
 
-void WordBinaryFileFormatReader::modifyDiapasonsForWorkWithCharacterStream()
+void SDRL::modifyDiapasonsForWorkWithCharacterStream()
 {
     uint32_t characterPartIndex = 0;
     uint32_t subForCorrectingOffset = _charactersOffsets[characterPartIndex].fc.fc;
@@ -473,7 +473,7 @@ void WordBinaryFileFormatReader::modifyDiapasonsForWorkWithCharacterStream()
     }
 }
 
-void WordBinaryFileFormatReader::readCharactersAndCreateContainers()
+void SDRL::readCharactersAndCreateContainers()
 {
     std::stack<std::shared_ptr<Container>> stackOfParentContainers;
     std::shared_ptr<Container> newElement;

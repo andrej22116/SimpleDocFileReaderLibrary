@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef WCBFF_STRUCTURES_H
-#define WCBFF_STRUCTURES_H
+#ifndef CP_BFF_STRUCTURES_H
+#define CP_WCBFF_STRUCTURES_H
 
 #include <cinttypes>
 
