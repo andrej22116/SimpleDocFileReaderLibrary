@@ -1,16 +1,12 @@
-#include <sdrl/wbff_structures.hpp>
+#include <SDRL/wbff_structures.hpp>
 
+/// Realisation CPP interface
+#ifdef __cplusplus
 
 template<typename T>
 void read( std::istream& istream
          , T & target ) {
     istream.read(reinterpret_cast<char*>(&target), sizeof(T));
-}
-
-
-sdrl::FIB_Base::FIB_Base(std::istream& input)
-{
-    input >> *this;
 }
 
 
@@ -60,6 +56,8 @@ sdrl::operator >> ( std::istream& istream
     fib.useXorObfuscation     = first_flags & 0x8000;
 
     fib.needLoadOverridePage  = second_flags & 0x4;
+
+    return istream;
 }
 
 
@@ -69,6 +67,8 @@ sdrl::operator >> ( std::istream& istream
 {
     istream.ignore(sizeof(uint16_t) * 13);
     read(istream, fib.lidFE);
+
+    return istream;
 }
 
 
@@ -92,6 +92,8 @@ sdrl::operator >> ( std::istream& istream
     read(istream, fib.ccpHdrTxbx);
 
     istream.ignore(sizeof(uint32_t) * 11);
+
+    return istream;
 }
 
 
@@ -100,6 +102,7 @@ sdrl::operator >> ( std::istream& istream
                   , sdrl::FIB_RgFcLcb97& fib )
 {
     read(istream, fib);
+    return istream;
 }
 
 
@@ -108,6 +111,7 @@ sdrl::operator >> ( std::istream& istream
                   , sdrl::FIB_RgFcLcb2000& fib )
 {
     read(istream, fib);
+    return istream;
 }
 
 
@@ -116,6 +120,7 @@ sdrl::operator >> ( std::istream& istream
                   , sdrl::FIB_RgFcLcb2002& fib )
 {
     read(istream, fib);
+    return istream;
 }
 
 
@@ -124,6 +129,7 @@ sdrl::operator >> ( std::istream& istream
                   , sdrl::FIB_RgFcLcb2003& fib )
 {
     read(istream, fib);
+    return istream;
 }
 
 
@@ -132,6 +138,7 @@ sdrl::operator >> ( std::istream& istream
                   , sdrl::FIB_RgFcLcb2007& fib)
 {
     read(istream, fib);
+    return istream;
 }
 
 
@@ -140,6 +147,7 @@ sdrl::operator >>( std::istream& istream
                  , sdrl::FIB_RgCswNewData2000& fib )
 {
     read(istream, fib);
+    return istream;
 }
 
 
@@ -148,4 +156,7 @@ sdrl::operator >>( std::istream& istream
                  , sdrl::FIB_RgCswNewData2007& fib )
 {
     read(istream, fib);
+    return istream;
 }
+
+#endif

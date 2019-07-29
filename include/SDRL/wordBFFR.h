@@ -2,7 +2,7 @@
 #define W_BFFR_H
 
 #include <SDRL/compoundBFFR.h>//"ClassWindowsCompoundBinaryFileFormatReader/windowscompoundbinaryfileformatreader.h"
-#include <SDRL/Word_wbff_structures.h>//"wbff_structures.h"
+#include <SDRL/wbff_structures.hpp>//"wbff_structures.h"
 #include <SDRL/inputbinarystream.h>//"ClassInputBinaryStream/inputbinarystream.h"
 
 #include <SDRL/Containers/textcontainer.h>//"Containers/ClassTextContainer/textcontainer.h"
@@ -10,6 +10,8 @@
 #include <SDRL/Containers/imagecontainer.h>//"Containers/ClassImageContainer/imagecontainer.h"
 
 #include <stack>
+
+namespace sdrl {
 
 class SDRL : protected WindowsCompoundBinaryFileFormatReader
 {
@@ -133,5 +135,7 @@ private:
 
     std::istream& getStream(std::string streamName);
 };
+
+}
 
 #endif // SDRL_H
