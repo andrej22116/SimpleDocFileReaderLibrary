@@ -2,25 +2,28 @@
 #define INPUTBINARYSTREAM_H
 
 #include <iostream>
-
-class InputBinaryStream : public std::istream
+template<typename CT = char>
+class InputBinaryStream
 {
+private:
+	std::basic_istream<CT>& _stream;
+
 public:
-    InputBinaryStream(std::streambuf* sb) : std::istream(sb) {}
-    InputBinaryStream(std::istream& stream) : std::istream(stream.rdbuf()) {}
+    InputBinaryStream(std::basic_istream<CT>& stream)
+		: _stream(stream) {}
 
     template<typename T>
     inline T getData()
     {
         T result;
-        this->read(reinterpret_cast<char*>(&result), sizeof(T));
+		_stream.read(reinterpret_cast<CT*>(&result), sizeof(T) / sizeof(CT));
         return result;
     }
 
     template<typename T>
     inline T getData(unsigned long long offset)
     {
-        this->seekg(offset, std::ios_base::beg);
+		_stream.seekg(offset, std::ios_base::beg);
         T result = getData<T>();
         return result;
     }
@@ -28,20 +31,22 @@ public:
     template<typename T>
     inline T peekData()
     {
-        std::streampos oldOffset = this->tellg();
-        T result = getData<T>(this->tellg());
-        this->seekg(oldOffset, std::ios_base::beg);
+        auto oldOffset = _stream.tellg();
+        T result = getData<T>();
+		_stream.seekg(oldOffset, std::ios_base::beg);
         return result;
     }
 
     template<typename T>
     inline T peekData(unsigned long long offset)
     {
-        std::streampos oldOffset = this->tellg();
+        auto oldOffset = _stream.tellg();
         T result = getData<T>(offset);
-        this->seekg(oldOffset, std::ios_base::beg);
+		_stream.seekg(oldOffset, std::ios_base::beg);
         return result;
     }
+
+	std::basic_istream<CT>& base() { return _stream; }
 };
 
 #endif // INPUTBINARYSTREAM_H

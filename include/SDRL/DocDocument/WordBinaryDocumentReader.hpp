@@ -1,19 +1,16 @@
 #ifndef W_BFFR_H
 #define W_BFFR_H
 
-#include <SDRL/compoundBFFR.h>//"ClassWindowsCompoundBinaryFileFormatReader/windowscompoundbinaryfileformatreader.h"
-#include <SDRL/wbff_structures.hpp>//"wbff_structures.h"
-#include <SDRL/inputbinarystream.h>//"ClassInputBinaryStream/inputbinarystream.h"
+#include <SDRL/DocDocument/Compound_wcbff_structures.h>
+#include <SDRL/DocDocument/WordBinaryFileFormat/wbff_structures.h>
+#include <SDRL/DocDocument/inputbinarystream.h>
+#include <SDRL/DocDocument/CompoundBFFR.hpp>
 
-#include <SDRL/Containers/textcontainer.h>//"Containers/ClassTextContainer/textcontainer.h"
-#include <SDRL/Containers/tablecontainer.h>//"Containers/ClassTableContainer/tablecontainer.h"
-#include <SDRL/Containers/imagecontainer.h>//"Containers/ClassImageContainer/imagecontainer.h"
-
-#include <stack>
+#include <sstream>
 
 namespace sdrl {
 
-class SDRL : protected WindowsCompoundBinaryFileFormatReader
+class WordBinaryDocumentReader : protected WindowsCompoundBinaryFileFormatReader
 {
 public:
     enum WBFF_Objects
@@ -39,12 +36,11 @@ private:
     struct Parse_Data;
 
     std::shared_ptr<FIB_Begin> _fibBegin;
-    std::shared_ptr<InputBinaryStream> _wordDocumentStream;
-    std::shared_ptr<InputBinaryStream> _tableStream;
+    std::shared_ptr<InputBinaryStream<char>> _wordDocumentStream;
+    std::shared_ptr<InputBinaryStream<char>> _tableStream;
 
     /// For parse characters blocks
     std::wstringstream _characterStream;
-    /// End. :)
 
     /// CpDiapasons Begin
     std::vector<uint32_t> _offsetsOfDataDiapasons;
@@ -59,22 +55,17 @@ private:
     std::vector<uint32_t> _charactersPositions;
     std::vector<Pcd> _charactersOffsets;
 
-    /// Containers Begin
-    std::list<std::shared_ptr<Container>> _allContainers;
-    /// Containers End
-
-
     time_t _timeLastSave;
     std::string _timeLastSave_str;
     //time_t _timeOfModify;
 public:
-    SDRL(const std::string& fileName, uint16_t flags = WBFF_Texts);
-    SDRL(std::istream& stream, uint16_t flags = WBFF_Texts);
+	WordBinaryDocumentReader(const std::wstring& fileName, uint16_t flags = WBFF_Texts);
+	WordBinaryDocumentReader(std::istream& stream, uint16_t flags = WBFF_Texts);
 
-    inline time_t getLastSaveTime() { return _timeLastSave; }
-    inline std::string getLastSaveTime_str() { return _timeLastSave_str; }
+    time_t getLastSaveTime() { return _timeLastSave; }
+    std::string getLastSaveTime_str() { return _timeLastSave_str; }
 
-    inline const std::vector<TextContainer>& getContainers();
+	std::wstring text() { return _characterStream.str(); }
 
 private:
     void readDocument();
@@ -88,29 +79,29 @@ private:
     void readClxArray(FIB_RgFcLcb97& fibEnd);
 
     /// Reading data for find characters! Begin
-    void readText(FIB_RgFcLcb97& fibEnd);   // Need doing this!
+    //void readText(FIB_RgFcLcb97& fibEnd);   // Need doing this!
     // Удалить это! Начало
     void readPrcArray(FIB_RgFcLcb97& fibEnd);
     void readPrcDataArray();
     void readPrlArray(int16_t prlArraySize);
     // Удалить это! Конец
-
+	/*
     void readPrcArray(FIB_RgFcLcb97& fibEnd, CLX_Data& clxData);
     void readPrcDataArray(CLX_Data& clxData);
     void readPrlArray(CLX_Data& clxData);
-
+	*/
     // Удалить это! Начало
     void readPcdtArray();
     void readPlcPcdArray(uint32_t plcPcdSize);
     void readCpArray(uint32_t lastCpValue);
     void readPlcArray();
     // Удалить это! Конец
-
+	/*
     void readPcdtArray(CLX_Data& clxData);
     void readPlcPcdArray(CLX_Data& clxData);
     void readCpArray(CLX_Data& clxData);
     void readPlcArray(CLX_Data& clxData);
-
+	*/
     /// Reading data for find characters! End
 
     /// Reading characters diapasons! Begin
@@ -125,7 +116,7 @@ private:
     void modifyDiapasonsForWorkWithCharacterStream();
     void readCharactersAndCreateContainers();
     void readCharacters();
-    void readCharacters(CLX_Data& clxData);
+    //void readCharacters(CLX_Data& clxData);
     /// Make containers! End
 
     /// Work with document date and time! Begin

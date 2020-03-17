@@ -1,22 +1,34 @@
 #include <iostream>
-#include <string>
 #include <fstream>
 #include <ctime>
 
 #include <SDRL.h>
 
+#include <locale>
+#include <codecvt>
+#include <string>
+
 using namespace std;
 
-int main()
+int main(int argc, const char** argv)
 {
     std::ios_base::sync_with_stdio(false);
-    std::wcout.imbue(std::locale(""));
-    //std::locale::global(std::locale("en_US.UTF-8"));
+    //std::wcout.imbue(std::locale("RU"));
+	wcout.imbue(locale("rus_rus.866"));
 
-    const std::string docName = "TestDoc.doc";
-    SDRL lol(docName);
+	std::wcout << "Test: " << std::locale("").name().c_str() << '\n';
 
-    std::cout << "\nLast save: " << lol.getLastSaveTime_str() << std::endl;
+	if (argc < 2) {
+		std::clog << "Try this: ./programm_name \"path to test file\"" << std::endl;
+		return 0;
+	}
+
+	sdrl::DocDocument document;
+	document.open(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>{}.from_bytes(argv[1]));
+
+	std::wcout << document.allText() << std::endl;
+
+	std::cin.get();
 
     return 0;
 }

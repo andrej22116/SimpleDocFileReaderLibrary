@@ -11,7 +11,7 @@ class WindowsCompoundBinaryFileFormatReader
 {
 public:
     WindowsCompoundBinaryFileFormatReader(std::istream& stream);
-    WindowsCompoundBinaryFileFormatReader(const std::string& filename);
+    WindowsCompoundBinaryFileFormatReader(const std::wstring& filename);
 
     uint32_t
     getStreamsAmount() { return _filesStreams.size(); }
@@ -64,7 +64,7 @@ private:
                     , bool isMiniFat);
 
 private:
-    std::map<std::string, uint32_t> _filesStreamsNames;
+    std::unordered_map<std::string, uint32_t> _filesStreamsNames;
     std::vector<std::stringstream> _filesStreams;
 };
 

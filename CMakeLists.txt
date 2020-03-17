@@ -6,9 +6,13 @@ set(SDRL_INCLUDE "include/")
 
 option(BUILD_EXAMPLE "BUILD_EXAMPLE" OFF)
 
+set(CMAKE_CXX_STANDARD 17)
+
 file(GLOB SDRLsrc #Select all files in src/
     "src/*.cpp"
-    "src/Containers/*.cpp"
+	"src/DocDocument/*.cpp"
+	"src/DocDocument/WordBinaryFileFormat/*.cpp"
+	"src/DocDocument/WordBinaryFileStructures/*.cpp"
 )
 
 add_library(SDRL ${SDRLsrc}) # Create library

@@ -27,7 +27,6 @@ struct FIB_Base {
     uint16_t pnNext;
 
     uint32_t lKey;
-    uint16_t nFib;
     uint8_t quickSavesCount;
 
     bool isTemplateDocument;
