@@ -26,7 +26,9 @@ int main(int argc, const char** argv)
 	sdrl::DocDocument document;
 	document.open(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>{}.from_bytes(argv[1]));
 
-	std::wcout << document.allText() << std::endl;
+	for (const auto& paragraph : document.paragraphList()) {
+		std::wcout << paragraph << std::endl;
+	}
 
 	std::cin.get();
 

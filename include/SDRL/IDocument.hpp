@@ -24,25 +24,25 @@ namespace sdrl {
 
 	public:
 		virtual void open(const std::wstring& path) = 0;
-		virtual bool isOpened() = 0;
+		virtual bool isOpened() const = 0;
 
 	public:
-		virtual Text allText() = 0;
+		virtual Text allText() const = 0;
 
-		virtual const ParagraphList& paragraphList() = 0;
+		virtual const ParagraphList& paragraphList() const = 0;
 
-		virtual const TableInfo& tableInfo(size_t index) = 0;
-		virtual const TableInfoList& tableInfoList() = 0;
+		virtual const TableInfo& tableInfo(size_t index) const = 0;
+		virtual const TableInfoList& tableInfoList() const = 0;
 
-		virtual const ImageInfo& imageInfo(size_t index) = 0;
-		virtual const ImageInfoList& imageInfoList() = 0;
+		virtual const ImageInfo& imageInfo(size_t index) const = 0;
+		virtual const ImageInfoList& imageInfoList() const = 0;
 
-		virtual const SectionInfo& sectionInfo(size_t index) = 0;
-		virtual const SectionInfoList& sectionInfoList() = 0;
+		virtual const SectionInfo& sectionInfo(size_t index) const = 0;
+		virtual const SectionInfoList& sectionInfoList() const = 0;
 
 	public:
-		const DocumentInfo& documentInfo() { return _documentInfo; }
-		const std::wstring& errorText() { return _errMsg; }
+		const DocumentInfo& documentInfo() const { return _documentInfo; }
+		const std::wstring& errorText() const { return _errMsg; }
 
 		operator bool() {
 			return isOpened();

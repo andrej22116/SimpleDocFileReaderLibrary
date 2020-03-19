@@ -32,28 +32,11 @@ private:
     struct ReadFlags;
 
     struct FIB_Begin;
-    struct CLX_Data;
-    struct Parse_Data;
 
     std::shared_ptr<FIB_Begin> _fibBegin;
     std::shared_ptr<InputBinaryStream<char>> _wordDocumentStream;
     std::shared_ptr<InputBinaryStream<char>> _tableStream;
-
-    /// For parse characters blocks
-    std::wstringstream _characterStream;
-
-    /// CpDiapasons Begin
-    std::vector<uint32_t> _offsetsOfDataDiapasons;
-    std::vector<uint32_t> _offsetsOfSequenceStructuresWithCharactersDiapasons;
-    std::vector<uint8_t>  _characterDiapasonsPropertiesOffsets;
-    std::vector<uint16_t> _characterDiapasonsStyles;
-    std::vector<Sprm>     _characterDiapasonsModify;
-    std::vector<uint32_t> _characterDiapasonsModifyOperands;
-    std::vector<uint32_t> _characterDiapasons;
-    /// CpDiapasons End
-
-    std::vector<uint32_t> _charactersPositions;
-    std::vector<Pcd> _charactersOffsets;
+	std::shared_ptr<FIB_RgFcLcb97> _fibEnd;
 
     time_t _timeLastSave;
     std::string _timeLastSave_str;
@@ -65,59 +48,16 @@ public:
     time_t getLastSaveTime() { return _timeLastSave; }
     std::string getLastSaveTime_str() { return _timeLastSave_str; }
 
-	std::wstring text() { return _characterStream.str(); }
+	/** return format year: 1997, 2000, 2002, 2003, 2007 */
+	uint16_t formatVersion();
+
+	std::wstring text();
+
+	std::vector<uint32_t> sections();
 
 private:
-    void readDocument();
+    void readDocumentHeader();
 
-    void readDocument97(FIB_RgFcLcb97& fibEnd);
-    void readDocument00(FIB_RgFcLcb2000& fibEnd);
-    void readDocument02(FIB_RgFcLcb2002& fibEnd);
-    void readDocument03(FIB_RgFcLcb2003& fibEnd);
-    void readDocument07(FIB_RgFcLcb2007& fibEnd);
-
-    void readClxArray(FIB_RgFcLcb97& fibEnd);
-
-    /// Reading data for find characters! Begin
-    //void readText(FIB_RgFcLcb97& fibEnd);   // Need doing this!
-    // Удалить это! Начало
-    void readPrcArray(FIB_RgFcLcb97& fibEnd);
-    void readPrcDataArray();
-    void readPrlArray(int16_t prlArraySize);
-    // Удалить это! Конец
-	/*
-    void readPrcArray(FIB_RgFcLcb97& fibEnd, CLX_Data& clxData);
-    void readPrcDataArray(CLX_Data& clxData);
-    void readPrlArray(CLX_Data& clxData);
-	*/
-    // Удалить это! Начало
-    void readPcdtArray();
-    void readPlcPcdArray(uint32_t plcPcdSize);
-    void readCpArray(uint32_t lastCpValue);
-    void readPlcArray();
-    // Удалить это! Конец
-	/*
-    void readPcdtArray(CLX_Data& clxData);
-    void readPlcPcdArray(CLX_Data& clxData);
-    void readCpArray(CLX_Data& clxData);
-    void readPlcArray(CLX_Data& clxData);
-	*/
-    /// Reading data for find characters! End
-
-    /// Reading characters diapasons! Begin
-    void readCpDiapasons(FIB_RgFcLcb97& fibEnd);
-    void readOffsetsOfDataDiapasons(FIB_RgFcLcb97& fibEnd);
-    void readOffsetsOfSequenceStructuresWithCharactersDiapasons();
-    void readCharacterDiapasons();
-    /// Reading characters diapasons! End
-
-    /// Make containers! Begin
-    void makeContainers();
-    void modifyDiapasonsForWorkWithCharacterStream();
-    void readCharactersAndCreateContainers();
-    void readCharacters();
-    //void readCharacters(CLX_Data& clxData);
-    /// Make containers! End
 
     /// Work with document date and time! Begin
     void readDateTime(FIB_RgFcLcb97& fibEnd);
