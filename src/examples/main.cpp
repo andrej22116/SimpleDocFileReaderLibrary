@@ -26,8 +26,17 @@ int main(int argc, const char** argv)
 	sdrl::DocDocument document;
 	document.open(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>{}.from_bytes(argv[1]));
 
+	auto sections = document.sectionInfoList();
+	size_t sectionCount = sections.size();
+	size_t currentSection = 0;
+	size_t currentParagraph = 0;
 	for (const auto& paragraph : document.paragraphList()) {
+		if ( sectionCount > currentSection 
+			&& sections[currentSection].firstParagraphIndex == currentParagraph ) {
+			std::wcout << std::endl << "Section " << ++currentSection << std::endl;
+		}
 		std::wcout << paragraph << std::endl;
+		++currentParagraph;
 	}
 
 	std::cin.get();
