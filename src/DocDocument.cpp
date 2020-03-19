@@ -55,12 +55,12 @@ namespace sdrl {
 
 	const SectionInfo& sdrl::DocDocument::sectionInfo(size_t index) const
 	{
-		return {};
+		return _data->sectionInfoList[index];
 	}
 
 	const SectionInfoList& sdrl::DocDocument::sectionInfoList() const
 	{
-		return {};
+		return _data->sectionInfoList;
 	}
 
 
