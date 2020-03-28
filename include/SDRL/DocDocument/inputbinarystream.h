@@ -21,7 +21,7 @@ public:
     }
 
     template<typename T>
-    inline T getData(unsigned long long offset)
+    inline T getData(size_t offset)
     {
 		_stream.seekg(offset, std::ios_base::beg);
         T result = getData<T>();
@@ -38,13 +38,28 @@ public:
     }
 
     template<typename T>
-    inline T peekData(unsigned long long offset)
+    inline T peekData(size_t offset)
     {
         auto oldOffset = _stream.tellg();
         T result = getData<T>(offset);
 		_stream.seekg(oldOffset, std::ios_base::beg);
         return result;
     }
+
+	inline void goTo(size_t offset)
+	{
+		_stream.seekg(offset, std::ios_base::beg);
+	}
+
+	inline void goToE(size_t offset)
+	{
+		_stream.seekg(offset, std::ios_base::end);
+	}
+
+	inline void ignore(size_t bytes)
+	{
+		_stream.ignore(bytes);
+	}
 
 	std::basic_istream<CT>& base() { return _stream; }
 };

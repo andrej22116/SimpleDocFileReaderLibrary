@@ -38,18 +38,14 @@ private:
     std::shared_ptr<InputBinaryStream<char>> _tableStream;
 	std::shared_ptr<FIB_RgFcLcb97> _fibEnd;
 
-    time_t _timeLastSave;
-    std::string _timeLastSave_str;
-    //time_t _timeOfModify;
 public:
 	WordBinaryDocumentReader(const std::wstring& fileName, uint16_t flags = WBFF_Texts);
 	WordBinaryDocumentReader(std::istream& stream, uint16_t flags = WBFF_Texts);
 
-    time_t getLastSaveTime() { return _timeLastSave; }
-    std::string getLastSaveTime_str() { return _timeLastSave_str; }
-
 	/** return format year: 1997, 2000, 2002, 2003, 2007 */
 	uint16_t formatVersion();
+
+	std::shared_ptr<Dop> documentInfo();
 
 	std::wstring text();
 

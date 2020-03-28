@@ -52,19 +52,19 @@ std::basic_istream<CT>& operator >> ( std::basic_istream<CT>& istream
 
 
 	fib.isTemplateDocument = first_flags & 0x1;
-	fib.hasOnlyAutotext = first_flags & 0x2;
-	fib.lastSaveIsIncremental = first_flags & 0x4;
-	fib.hasPictures = first_flags & 0x8;
-	fib.quickSavesCount = first_flags & 0xF0;
-	fib.isEncrypted = first_flags & 0x100;
-	fib.hasStreamTableOne = first_flags & 0x200;
-	fib.readOnlyRecomended = first_flags & 0x400;
-	fib.hasPassword = first_flags & 0x800;
-	fib.needOverrideInfo = first_flags & 0x2000;
-	fib.fromFarEast = first_flags & 0x4000;
-	fib.useXorObfuscation = first_flags & 0x8000;
+	fib.hasOnlyAutotext = (first_flags >> 1) & 0x1;
+	fib.lastSaveIsIncremental = (first_flags >> 2) & 0x1;
+	fib.hasPictures = (first_flags >> 3) & 0x1;
+	fib.quickSavesCount = (first_flags >> 4) & 0xF;
+	fib.isEncrypted = (first_flags >> 8) & 0x1;
+	fib.hasStreamTableOne = (first_flags >> 9) & 0x1;
+	fib.readOnlyRecomended = (first_flags >> 10) & 0x1;
+	fib.hasPassword = (first_flags >> 11) & 0x1;
+	fib.needOverrideInfo = (first_flags >> 13) & 0x1;
+	fib.fromFarEast = (first_flags >> 14) & 0x1;
+	fib.useXorObfuscation = (first_flags >> 15) & 0x1;
 
-	fib.needLoadOverridePage = second_flags & 0x4;
+	fib.needLoadOverridePage = (second_flags >> 2) & 0x1;
 
 	return istream;
 }

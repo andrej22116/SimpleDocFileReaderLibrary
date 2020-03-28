@@ -5,6 +5,9 @@
 
 namespace sdrl {
 
+	size_t calcPlcElementsNumber( uint32_t structureSize
+								, uint32_t elementSize );
+
 	struct WordBinaryDocumentReader::FIB_Begin
 	{
 		FIB_Base fibBase;
@@ -46,11 +49,16 @@ namespace sdrl {
 		_fibBegin = std::make_shared<FIB_Begin>();
 
 		_wordDocumentStream->base() >> _fibBegin->fibBase;
-		_wordDocumentStream->base().ignore(sizeof(uint16_t));
+		_wordDocumentStream->ignore(sizeof(uint16_t));
 		_wordDocumentStream->base() >> _fibBegin->fibRgW97;
-		_wordDocumentStream->base().ignore(sizeof(uint16_t));
+		_wordDocumentStream->ignore(sizeof(uint16_t));
 		_wordDocumentStream->base() >> _fibBegin->fibLw97;
-		_wordDocumentStream->base().ignore(sizeof(uint16_t));
+
+		auto fibRgFcLcbSize = _wordDocumentStream->getData<uint16_t>();
+		auto cswNew = _wordDocumentStream->peekData<uint16_t>(154 + fibRgFcLcbSize * 8);
+		if (cswNew) {
+			_fibBegin->fibBase.fileFormatVersion = _wordDocumentStream->peekData<uint16_t>(156 + fibRgFcLcbSize * 8);
+		}
 
 		std::string nameofTableStream("0Table");
 		if ( _fibBegin->fibBase.hasStreamTableOne )
@@ -85,25 +93,6 @@ namespace sdrl {
 		}
 	}
 
-	void WordBinaryDocumentReader::readDateTime(FIB_RgFcLcb97& fibEnd)
-	{
-		_timeLastSave = getTime(fibEnd.dwLowDateTime, fibEnd.dwHighDateTime);
-		std::tm* tm = std::localtime(&_timeLastSave);
-		std::stringstream ss;
-		ss << std::put_time(tm, "Date: %F; Time: %T");
-		_timeLastSave_str = ss.str();
-	}
-
-
-	time_t WordBinaryDocumentReader::getTime(uint32_t dwLowDateTime, uint32_t dwHighDateTime)
-	{
-		static const uint64_t EPOCH_DIFFERENCE_MICROS = 11644473600LL;
-		uint64_t total_us = ((uint64_t)dwHighDateTime << 32) + dwLowDateTime;
-		//total_us -= EPOCH_DIFFERENCE_MICROS;
-
-		return (time_t)(total_us / 10000000 - EPOCH_DIFFERENCE_MICROS);
-	}
-
 	std::istream& WordBinaryDocumentReader::getStream(std::string streamName)
 	{
 		auto streamID = this->getStreamIdByName(streamName);
@@ -115,12 +104,43 @@ namespace sdrl {
 		return this->getStreamById(streamID);
 	}
 
+	/* ///////////////////////////////////////////////////
+
+	Read docInfo
+
+	/////////////////////////////////////////////////// */
+
+	std::shared_ptr<Dop> WordBinaryDocumentReader::documentInfo()
+	{
+		auto dop = std::make_shared<Dop>();
+
+		_tableStream->goTo(_fibEnd->fcDop + 6);
+
+		auto flags = _tableStream->getData<uint8_t>();
+		dop->fExactCWords = (flags >> 1) & 0x1;
+
+		_tableStream->goTo(_fibEnd->fcDop + 20);
+		dop->dttmCreated = _tableStream->getData<uint32_t>();
+		dop->dttmRevised = _tableStream->getData<uint32_t>();
+		_tableStream->ignore(sizeof(uint32_t));
+
+		dop->nRevision = _tableStream->getData<uint16_t>();
+		dop->tmEdited = _tableStream->getData<int32_t>();
+		dop->cWords = _tableStream->getData<int32_t>();
+		dop->cCh = _tableStream->getData<int32_t>();
+		dop->cPg = _tableStream->getData<int16_t>();
+		dop->cParas = _tableStream->getData<int32_t>();
+		_tableStream->ignore(sizeof(uint32_t));
+		dop->cLines = _tableStream->getData<int32_t>();
+
+		return dop;
+	}
 
 	/* ///////////////////////////////////////////////////
 
-Read text
+	Read text
 
-/////////////////////////////////////////////////// */
+	/////////////////////////////////////////////////// */
 
 	struct _TextData {
 		InputBinaryStream<char>& tableStream;
@@ -240,12 +260,12 @@ Read text
 
 			Pcd pcd;
 			pcd.A_fNoParaLast = firstDataBlock & 0x1;
-			pcd.B_fR1 = firstDataBlock & 0x2;
-			pcd.C_fDirty = firstDataBlock & 0x4;
+			pcd.B_fR1 = (firstDataBlock >> 1) & 0x1;
+			pcd.C_fDirty = (firstDataBlock >> 2) & 0x1;
 
 			pcd.fc = fcCompresdsedDataBlock & ((1 << 30) - 1);
-			pcd.fc_A_fCompressed = fcCompresdsedDataBlock & (1 << 30);
-			pcd.fc_B_r1 = fcCompresdsedDataBlock & (1 << 31);
+			pcd.fc_A_fCompressed = (fcCompresdsedDataBlock >> 30) & 0x1;
+			pcd.fc_B_r1 = (fcCompresdsedDataBlock >> 31) & 0x1;
 
 
 			pcd.prm_A_fComplex = prmDataBlock & 0x1;
@@ -269,8 +289,8 @@ Read text
 
 				std::wstring_convert<std::codecvt_utf16<wchar_t, 0x10ffff, std::little_endian>> conversion;
 				output << conversion.from_bytes(
-					reinterpret_cast<const char*> (&str[0]),
-					reinterpret_cast<const char*> (&str[0] + str.size()));
+					reinterpret_cast<const char*>(str.data()),
+					reinterpret_cast<const char*>(str.data() + str.size()));
 				int a = 0; a++;
 			}
 			else
@@ -291,7 +311,7 @@ Read text
 
 	std::vector<uint32_t> WordBinaryDocumentReader::sections()
 	{
-		uint32_t sectionsCount = (_fibEnd->lcbPlcfSed - sizeof(uint32_t)) / 12;
+		uint32_t sectionsCount = calcPlcElementsNumber(_fibEnd->lcbPlcfSed, 12);
 
 		std::vector<uint32_t> result{};
 		result.reserve(sectionsCount);
@@ -303,6 +323,20 @@ Read text
 		}
 
 		return result;
+	}
+
+
+	/* ///////////////////////////////////////////////////
+
+	Other
+
+	/////////////////////////////////////////////////// */
+
+
+	size_t calcPlcElementsNumber( uint32_t structureSize
+								, uint32_t elementSize )
+	{
+		return (structureSize - 4) / (4 + elementSize);
 	}
 
 }

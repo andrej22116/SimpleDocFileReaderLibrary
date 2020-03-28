@@ -110,6 +110,14 @@ namespace sdrl {
 		makeParagraphList(tempData);
 		makeSectionInfoList(tempData, reader.sections());
 
+		auto docData = reader.documentInfo();
+		_documentInfo.createTime = docData->dttmCreated;
+		_documentInfo.lastSave = docData->dttmRevised;
+		_documentInfo.pageCount = docData->cPg;
+		_documentInfo.lineCount = docData->cLines;
+		_documentInfo.characterCount = docData->cCh;
+		_documentInfo.wordCount = docData->cWords;
+
 		stream.close();
 
 		_isOpened = true;

@@ -39,6 +39,28 @@ int main(int argc, const char** argv)
 		++currentParagraph;
 	}
 
+	const auto& docInfo = document.documentInfo();
+	std::wcout << std::endl
+		<< "Document info:" << std::endl
+
+		<< "Page count: " << docInfo.pageCount << std::endl
+		<< "Word count: " << docInfo.wordCount << std::endl
+		<< "Character count: " << docInfo.characterCount << std::endl
+
+		<< "Create time (dd.mm.yyyy hh:mm): " 
+		<< docInfo.createTime.day() << "."
+		<< docInfo.createTime.month() << "."
+		<< docInfo.createTime.year() << " "
+		<< docInfo.createTime.hour() << ":" 
+		<< docInfo.createTime.minute() << std::endl
+
+		<< "Last save time (dd.mm.yyyy hh:mm): " 
+		<< docInfo.lastSave.day() << "."
+		<< docInfo.lastSave.month() << "."
+		<< docInfo.lastSave.year() << " "
+		<< docInfo.lastSave.hour() << ":" 
+		<< docInfo.lastSave.minute() << std::endl;
+
 	std::cin.get();
 
     return 0;

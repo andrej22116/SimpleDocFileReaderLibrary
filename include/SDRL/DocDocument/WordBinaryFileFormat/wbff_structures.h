@@ -5,16 +5,9 @@
 #ifndef WBFF_STRUCTURES_HPP
 #define WBFF_STRUCTURES_HPP
 
-#ifdef __cplusplus
 #include <cinttypes>
-#else
-#include <inttypes.h>
-#include <stdbool.h>
-#endif
 
-#ifdef __cplusplus
 namespace sdrl {
-#endif
 
 // ///////////////////////////////////////////////////////////////////////// //
 // ///////////////////////////////////////////////////////////////////////// //
@@ -43,10 +36,6 @@ struct FIB_Base {
     bool needLoadOverridePage;
 };
 
-#ifndef __cplusplus
-typedef struct FIB_Base FIB_Base;
-#endif
-
 // ///////////////////////////////////////////////////////////////////////// //
 // ///////////////////////////////////////////////////////////////////////// //
 
@@ -54,10 +43,6 @@ struct FIB_RgW97
 {
     uint16_t lidFE;
 };
-
-#ifndef __cplusplus
-typedef struct FIB_RgW97 FIB_RgW97;
-#endif
 
 // ///////////////////////////////////////////////////////////////////////// //
 // ///////////////////////////////////////////////////////////////////////// //
@@ -75,10 +60,6 @@ struct FIB_RgLw97
     int32_t ccpTxbx;
     int32_t ccpHdrTxbx;
 };
-
-#ifndef __cplusplus
-typedef struct FIB_RgLw97 FIB_RgLw97;
-#endif
 
 // ///////////////////////////////////////////////////////////////////////// //
 // ///////////////////////////////////////////////////////////////////////// //
@@ -365,22 +346,11 @@ struct FIB_RgFcLcb97
     uint32_t lcbSttbfUssr;
 };
 
-#ifndef __cplusplus
-typedef struct FIB_RgFcLcb97 FIB_RgFcLcb97;
-#endif
-
 // ///////////////////////////////////////////////////////////////////////// //
 // ///////////////////////////////////////////////////////////////////////// //
 
-#ifdef __cplusplus
 struct FIB_RgFcLcb2000 : public FIB_RgFcLcb97
 {
-#else
-struct FIB_RgFcLcb2000
-{
-    FIB_RgFcLcb97 base;
-#endif
-
     uint32_t fcPlcfTch;
     uint32_t lcbPlcfTch;
 
@@ -427,22 +397,11 @@ struct FIB_RgFcLcb2000
     uint32_t lcbBkdEdnOld;
 };
 
-#ifndef __cplusplus
-typedef struct FIB_RgFcLcb2000 FIB_RgFcLcb2000;
-#endif
-
 // ///////////////////////////////////////////////////////////////////////// //
 // ///////////////////////////////////////////////////////////////////////// //
 
-#ifdef __cplusplus
 struct FIB_RgFcLcb2002 : public FIB_RgFcLcb2000
 {
-#else
-struct FIB_RgFcLcb2002
-{
-    FIB_RgFcLcb2000 base;
-#endif
-
     uint32_t ignore_fcUnused1_2002;
     uint32_t ignore_lcbUnused1_2002;
 
@@ -528,22 +487,11 @@ struct FIB_RgFcLcb2002
     uint32_t lcbPlcflvcMixedXP;
 };
 
-#ifndef __cplusplus
-typedef struct FIB_RgFcLcb2002 FIB_RgFcLcb2002;
-#endif
-
 // ///////////////////////////////////////////////////////////////////////// //
 // ///////////////////////////////////////////////////////////////////////// //
 
-#ifdef __cplusplus
 struct FIB_RgFcLcb2003 : public FIB_RgFcLcb2002
 {
-#else
-struct FIB_RgFcLcb2003
-{
-    FIB_RgFcLcb2002 base;
-#endif
-
     uint32_t fcHplxsdr;
     uint32_t lcbHplxsdr;
 
@@ -629,10 +577,6 @@ struct FIB_RgFcLcb2003
     uint32_t lcbAfd;
 };
 
-#ifndef __cplusplus
-typedef struct FIB_RgFcLcb2003 FIB_RgFcLcb2003;
-#endif
-
 // ///////////////////////////////////////////////////////////////////////// //
 // ///////////////////////////////////////////////////////////////////////// //
 
@@ -640,15 +584,9 @@ typedef struct FIB_RgFcLcb2003 FIB_RgFcLcb2003;
  * @brief The FIB_RgFcLcb2007 struct for .doc's with FIB type 2007 year
  * @warning All fields shuld be ignored (According to the documentation)
  */
-#ifdef __cplusplus
+
 struct FIB_RgFcLcb2007 : public FIB_RgFcLcb2003
 {
-#else
-struct FIB_RgFcLcb2007
-{
-    FIB_RgFcLcb2003 base;
-#endif
-
     uint32_t fcPlcfmthd;
     uint32_t lcbPlcfmthd;
 
@@ -706,10 +644,6 @@ struct FIB_RgFcLcb2007
     uint32_t fcColorSchemeMapping;
     uint32_t lcbColorSchemeMapping;
 };
-
-#ifndef __cplusplus
-typedef struct FIB_RgFcLcb2007 FIB_RgFcLcb2007;
-#endif
 
 // ///////////////////////////////////////////////////////////////////////// //
 // ///////////////////////////////////////////////////////////////////////// //
@@ -771,8 +705,25 @@ struct Pcd
     uint16_t prm_data;
 };
 
-#ifdef __cplusplus
-}
-#endif
+/**
+	Dop is part of original Dop sdtructure.
+	If you need more data from original struct, add this fields and read it.
+*/
+struct Dop {
+	uint32_t dttmCreated;
+	uint32_t dttmRevised;
+	int32_t tmEdited;
+	int32_t cWords;
+	int32_t cCh;
+	int32_t cParas;
+	int32_t cLines;
+	int16_t nRevision;
+	int16_t cPg;
+
+	bool fExactCWords;
+};
+
+
+} // namespace sdrl
 
 #endif // WBFF_STRUCTURES_H
